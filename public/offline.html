@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offline - MedHub</title>
+    <style>
+      :root {
+        --color-background: #f9fafb; /* gray-50 */
+        --color-card-background: #ffffff; /* white */
+        --color-primary: #0d9488; /* teal-600 */
+        --color-primary-hover: #0f766e; /* teal-700 */
+        --color-text-primary: #1f2937; /* gray-800 */
+        --color-text-secondary: #4b5563; /* gray-600 */
+        --color-text-tertiary: #6b7280; /* gray-500 */
+        --color-success: #16a34a; /* green-600 */
+        --color-border: #e5e7eb; /* gray-200 */
+      }
+
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        margin: 0;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background-color: var(--color-background);
+        color: var(--color-text-primary);
+        text-align: center;
+        box-sizing: border-box;
+      }
+
+      .container {
+        max-width: 500px;
+        width: 100%;
+        padding: 2.5rem;
+        background-color: var(--color-card-background);
+        border-radius: 1rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07),
+          0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      }
+
+      .icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1.5rem;
+        color: var(--color-primary);
+      }
+
+      h1 {
+        font-size: 1.875rem; /* 30px */
+        font-weight: 700;
+        margin: 0 0 1rem;
+        color: var(--color-text-primary);
+      }
+
+      p {
+        color: var(--color-text-secondary);
+        line-height: 1.6;
+        margin: 0 0 2rem;
+        font-size: 1rem;
+      }
+
+      .retry-btn {
+        background-color: var(--color-primary);
+        color: white;
+        border: none;
+        padding: 0.875rem 1.5rem;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .retry-btn:hover {
+        background-color: var(--color-primary-hover);
+        transform: translateY(-2px);
+      }
+
+      .retry-btn .icon-sm {
+        width: 20px;
+        height: 20px;
+      }
+
+      .features {
+        margin-top: 2.5rem;
+        text-align: left;
+        background-color: var(--color-background);
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        border: 1px solid var(--color-border);
+      }
+
+      .features h3 {
+        font-size: 1.125rem; /* 18px */
+        margin: 0 0 1rem;
+        color: var(--color-text-primary);
+        font-weight: 600;
+      }
+
+      .features ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        space-y: 0.75rem;
+      }
+
+      .features li {
+        color: var(--color-text-secondary);
+        padding-left: 2rem;
+        position: relative;
+        font-size: 0.9375rem; /* 15px */
+        line-height: 1.5;
+      }
+
+      .features li::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        top: 1px;
+        color: var(--color-success);
+        font-weight: bold;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: rgba(22, 163, 74, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="icon">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="100%"
+          height="100%"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+          <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+          <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+          <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+          <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+          <line x1="12" y1="20" x2="12.01" y2="20"></line>
+        </svg>
+      </div>
+      <h1>Você está Offline</h1>
+      <p>
+        Parece que não há conexão com a internet. O <strong>MedHub</strong>
+        requer conexão para sincronizar dados, mas você ainda pode ter acesso a
+        informações carregadas anteriormente.
+      </p>
+
+      <button class="retry-btn" onclick="window.location.reload()">
+        <div class="icon-sm">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="100%"
+            height="100%"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
+            <path d="M21 21v-5h-5"></path>
+          </svg>
+        </div>
+        Tentar Reconectar
+      </button>
+
+      <div class="features">
+        <h3>Funcionalidades em Cache:</h3>
+        <ul>
+          <li>Navegação entre páginas já visitadas</li>
+          <li>Visualização de dados carregados anteriormente</li>
+          <li>Acesso a recursos salvos localmente</li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      // Tenta reconectar automaticamente quando a conexão voltar
+      window.addEventListener("online", function () {
+        window.location.reload();
+      });
+
+      // Verifica a conexão periodicamente como um fallback
+      setInterval(function () {
+        if (navigator.onLine) {
+          window.location.reload();
+        }
+      }, 30000); // Verifica a cada 30 segundos
+    </script>
+  </body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": true,
+    "tsBuildInfoFile": ".turbo/turbo-tsconfig.tsbuildinfo"
+  },
+  "include": [
+    "app/**/*",
+    "components/**/*",
+    "lib/**/*",
+    "utils/**/*",
+    "types/**/*",
+    "config/**/*",
+    "hooks/**/*",
+    "stores/**/*",
+    "models/**/*",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".turbo",
+    "dist",
+    "build"
+  ]
+}
