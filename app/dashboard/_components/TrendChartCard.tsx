@@ -170,18 +170,18 @@ export function TrendChartCard({ data }: TrendChartCardProps) {
 
   return (
     <div
-      className="bg-white rounded-xl border border-gray-100 p-5"
+      className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-5"
       style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
     >
       {/* Cabeçalho + dropdown de período (estático — Passo 7 adiciona interatividade) */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-sm font-semibold text-gray-800">Tendência Pass/Fail</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Últimos 7 dias</p>
+          <h2 className="text-sm font-semibold text-gray-800 dark:text-slate-200">Tendência Pass/Fail</h2>
+          <p className="text-xs text-gray-400 dark:text-slate-400 mt-0.5">Últimos 7 dias</p>
         </div>
 
         {/* Select estático — no Passo 7 controlará o período via useState */}
-        <select className="text-xs border border-gray-200 rounded-lg px-3 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <select className="text-xs border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-1.5 text-gray-600 dark:text-slate-300 bg-white dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option>Últimos 7 dias</option>
           <option>Últimos 14 dias</option>
           <option>Últimos 30 dias</option>
