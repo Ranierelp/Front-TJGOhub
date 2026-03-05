@@ -28,10 +28,12 @@ export interface TestCaseRow {
 interface DRFPage<T> { count: number; results: T[]; }
 
 export function useCaseList() {
-  const [cases,   setCases]   = useState<TestCaseRow[]>([]);
-  const [count,   setCount]   = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [page,    setPage]    = useState(1);
+  const [cases,      setCases]      = useState<TestCaseRow[]>([]);
+  const [count,      setCount]      = useState(0);
+  const [loading,    setLoading]    = useState(true);
+  const [page,       setPage]       = useState(1);
+  // Incrementar refreshKey força o useEffect a re-executar sem mudar filtros
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Valor do input de busca (exibido imediatamente)
   const [search, setSearch] = useState("");
@@ -62,7 +64,7 @@ export function useCaseList() {
       .then(r => { setCases(r.data.results); setCount(r.data.count); })
       .catch(() => { setCases([]); setCount(0); })
       .finally(() => setLoading(false));
-  }, [page, debouncedSearch, statusFilter, projectFilter]);
+  }, [page, debouncedSearch, statusFilter, projectFilter, refreshKey]);
 
   // Ao trocar filtro de status ou projeto, volta para página 1
   const updateStatus  = (v: string) => { setStatusFilter(v);  setPage(1); };
@@ -70,11 +72,14 @@ export function useCaseList() {
 
   const totalPages = Math.max(1, Math.ceil(count / 10));
 
+  const refetch = () => setRefreshKey((k) => k + 1);
+
   return {
     cases, count, loading,
     page, setPage, totalPages,
     search, setSearch,
     statusFilter,  updateStatus,
     projectFilter, updateProject,
+    refetch,
   };
 }
