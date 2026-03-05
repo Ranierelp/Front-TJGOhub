@@ -154,10 +154,10 @@ export function PassRateCard({ passed, failed, skipped = 0 }: PassRateCardProps)
 
   return (
     <div
-      className="bg-white rounded-xl border border-gray-100 p-5 flex flex-col gap-4"
+      className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-5 flex flex-col gap-4"
       style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
     >
-      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+      <span className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wide">
         Pass Rate
       </span>
 
@@ -170,22 +170,22 @@ export function PassRateCard({ passed, failed, skipped = 0 }: PassRateCardProps)
       </div>
 
       {/* Legenda manual — mostra passed/failed/skipped com cor e valor */}
-      <div className="flex justify-center gap-4 text-xs text-gray-500 flex-wrap">
+      <div className="flex justify-center gap-4 text-xs text-gray-500 dark:text-slate-400 flex-wrap">
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0"
             style={{ background: CHART_COLORS.passed }} />
-          Passou: <strong className="text-gray-700">{passed}</strong>
+          Passou: <strong className="text-gray-700 dark:text-slate-200">{passed}</strong>
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0"
             style={{ background: CHART_COLORS.failed }} />
-          Falhou: <strong className="text-gray-700">{failed}</strong>
+          Falhou: <strong className="text-gray-700 dark:text-slate-200">{failed}</strong>
         </span>
         {skipped > 0 && (
           <span className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0"
               style={{ background: CHART_COLORS.skipped }} />
-            Skip: <strong className="text-gray-700">{skipped}</strong>
+            Skip: <strong className="text-gray-700 dark:text-slate-200">{skipped}</strong>
           </span>
         )}
       </div>
