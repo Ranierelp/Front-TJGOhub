@@ -56,12 +56,12 @@ export function LastRunCard({ run }: LastRunCardProps) {
 
   return (
     <div
-      className="bg-white rounded-xl border border-gray-100 p-5 flex flex-col gap-3"
+      className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-5 flex flex-col gap-3"
       style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
     >
       {/* Cabeçalho: título do card + badge de status */}
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+        <span className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wide">
           Última Execução
         </span>
         <span
@@ -75,17 +75,17 @@ export function LastRunCard({ run }: LastRunCardProps) {
 
       {/* Dados do projeto */}
       <div>
-        <p className="font-bold text-gray-900 text-base leading-tight">{run.project_name}</p>
-        <p className="text-sm text-gray-500 mt-0.5">{run.environment_name}</p>
+        <p className="font-bold text-gray-900 dark:text-slate-100 text-base leading-tight">{run.project_name}</p>
+        <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">{run.environment_name}</p>
       </div>
 
       {/* Meta-dados: data, duração, taxa de sucesso */}
-      <div className="text-xs text-gray-400 space-y-0.5">
+      <div className="text-xs text-gray-400 dark:text-slate-400 space-y-0.5">
         <p>{formatDate(run.started_at)}</p>
-        <p>Duração: <span className="text-gray-600">{run.duration_formatted}</span></p>
+        <p>Duração: <span className="text-gray-600 dark:text-slate-300">{run.duration_formatted}</span></p>
         <p>
           Taxa de sucesso:{" "}
-          <span className="font-semibold text-gray-700">{run.success_rate.toFixed(1)}%</span>
+          <span className="font-semibold text-gray-700 dark:text-slate-200">{run.success_rate.toFixed(1)}%</span>
         </p>
       </div>
 
