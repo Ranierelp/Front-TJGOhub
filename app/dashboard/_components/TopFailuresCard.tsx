@@ -28,13 +28,13 @@ export function TopFailuresCard({ failures }: TopFailuresCardProps) {
 
   return (
     <div
-      className="bg-white rounded-xl border border-gray-100 p-5 flex flex-col gap-3"
+      className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-5 flex flex-col gap-3"
       style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
     >
       {/* Cabeçalho com ícone de alerta */}
       <div className="flex items-center gap-2">
         <AlertCircle size={14} className="text-red-500 flex-shrink-0" />
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+        <span className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wide">
           Top Falhas Recorrentes
         </span>
       </div>
@@ -48,7 +48,7 @@ export function TopFailuresCard({ failures }: TopFailuresCardProps) {
               o usuário pode ver o nome completo no tooltip nativo do browser.
               Paralelo HTML: é o mesmo atributo title de sempre.
             */}
-            <p className="text-sm text-gray-700 truncate flex-1" title={item.name}>
+            <p className="text-sm text-gray-700 dark:text-slate-300 truncate flex-1" title={item.name}>
               {item.name}
             </p>
 
@@ -61,7 +61,7 @@ export function TopFailuresCard({ failures }: TopFailuresCardProps) {
 
         {/* Estado vazio — rendered quando não há falhas */}
         {failures.length === 0 && (
-          <li className="text-sm text-gray-400 text-center py-6">
+          <li className="text-sm text-gray-400 dark:text-slate-500 text-center py-6">
             Nenhuma falha registrada
           </li>
         )}
