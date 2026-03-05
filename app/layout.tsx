@@ -24,7 +24,6 @@ import { Metadata, Viewport } from "next";
 import clsx from "clsx";
 
 import { Providers } from "./providers";
-import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 
@@ -141,8 +140,6 @@ export default function RootLayout({
           <div className="relative flex flex-col min-h-dvh pt-safe">
             {/* children = a página atual (ex: LoginPage, DashboardPage...) */}
             <main>{children}</main>
-            {/* PWAInstallPrompt: botão "Instalar App" em browsers compatíveis */}
-            <PWAInstallPrompt />
           </div>
         </Providers>
       </body>

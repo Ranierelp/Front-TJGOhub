@@ -81,3 +81,4 @@ export function activateProject(id: string) {
 export function deleteProject(id: string) {
   return del(`${api.endpoints.projects}${id}/`);
 }
+  

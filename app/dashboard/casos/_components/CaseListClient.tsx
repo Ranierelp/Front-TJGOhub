@@ -2,17 +2,23 @@
 
 import { useState }    from "react";
 import { useRouter }   from "next/navigation";
-import { Plus, Search, Loader2, FileText } from "lucide-react";
+import { Plus, Search, Loader2, FileText, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { useCaseList, type TestCaseRow } from "@/hooks/useCaseList";
 import { useProjects }                   from "@/hooks/useProjects";
+import { del, api }                      from "@/lib/api";
+import { SimpleDeleteModal }             from "@/app/dashboard/projetos/_components/ProjectModals";
 
 // ── Configuração visual dos status ─────────────────────────────────────────
 const STATUS = {
   DRAFT:      { label: "Rascunho",   bg: "linear-gradient(135deg,#FEF3C7,#FDE68A)", color: "#92400E" },
-  ACTIVE:     { label: "Ativo",       bg: "linear-gradient(135deg,#D1FAE5,#A7F3D0)", color: "#065F46" },
-  DEPRECATED: { label: "Depreciado",  bg: "linear-gradient(135deg,#FEE2E2,#FECACA)", color: "#991B1B" },
+  ACTIVE:     { label: "Ativo",      bg: "linear-gradient(135deg,#D1FAE5,#A7F3D0)", color: "#065F46" },
+  DEPRECATED: { label: "Depreciado", bg: "linear-gradient(135deg,#FEE2E2,#FECACA)", color: "#991B1B" },
 } as const;
+
+// Colunas: ID | Título | Projeto | Status | Tags | Excluir
+const GRID = "90px 1fr 150px 115px 1fr 32px";
 
 // ── Mini-componentes ────────────────────────────────────────────────────────
 function GlassCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
@@ -26,14 +32,20 @@ function GlassCard({ children, className = "" }: { children: React.ReactNode; cl
   );
 }
 
-function CaseRow({ tc, onClick }: { tc: TestCaseRow; onClick: () => void }) {
+interface CaseRowProps {
+  tc: TestCaseRow;
+  onClick: () => void;
+  onDelete: (tc: TestCaseRow) => void;
+}
+
+function CaseRow({ tc, onClick, onDelete }: CaseRowProps) {
   const [hovered, setHovered] = useState(false);
   const s = STATUS[tc.status] ?? STATUS.DRAFT;
   return (
-    <div onClick={onClick}
-      className="grid gap-4 px-5 py-3.5 cursor-pointer items-center"
+    <div
+      className="grid gap-4 px-5 py-3.5 items-center"
       style={{
-        gridTemplateColumns: "90px 1fr 150px 115px 160px",
+        gridTemplateColumns: GRID,
         borderBottom: "1px solid rgba(226,232,240,0.3)",
         background: hovered ? "rgba(239,246,255,0.4)" : "transparent",
         transition: "background 0.15s",
@@ -42,38 +54,45 @@ function CaseRow({ tc, onClick }: { tc: TestCaseRow; onClick: () => void }) {
       onMouseLeave={() => setHovered(false)}>
 
       {/* case_id */}
-      <span className="text-xs font-mono font-bold px-2 py-1 rounded-lg inline-block"
+      <span onClick={onClick} className="cursor-pointer text-xs font-mono font-bold px-2 py-1 rounded-lg inline-block"
         style={{ background: "linear-gradient(135deg,rgba(219,234,254,0.8),rgba(191,219,254,0.5))", color: "#1D4ED8" }}>
         {tc.case_id}
       </span>
 
       {/* título + módulo */}
-      <div className="min-w-0">
+      <div onClick={onClick} className="min-w-0 cursor-pointer">
         <p className="text-sm font-semibold truncate" style={{ color: "#1E293B" }}>{tc.title}</p>
         {tc.module && <p className="text-xs truncate mt-0.5" style={{ color: "#94A3B8" }}>{tc.module}</p>}
       </div>
 
       {/* projeto */}
-      <span className="text-xs truncate" style={{ color: "#64748B" }}>{tc.project_name}</span>
+      <span onClick={onClick} className="text-xs truncate cursor-pointer" style={{ color: "#64748B" }}>{tc.project_name}</span>
 
       {/* status */}
-      <span className="inline-flex items-center justify-center text-xs font-semibold px-2.5 py-1 rounded-lg"
+      <span onClick={onClick} className="cursor-pointer inline-flex items-center justify-center text-xs font-semibold px-2.5 py-1 rounded-lg"
         style={{ background: s.bg, color: s.color }}>
         {s.label}
       </span>
 
       {/* tags */}
-      <div className="flex flex-wrap gap-1">
+      <div onClick={onClick} className="flex flex-wrap gap-1 cursor-pointer">
         {tc.tags.slice(0, 3).map(tag => (
           <span key={tag.id} className="text-xs px-2 py-0.5 rounded-full"
             style={{ background: "rgba(241,245,249,0.8)", color: "#64748B", border: "1px solid rgba(226,232,240,0.7)" }}>
             {tag.name}
           </span>
         ))}
-        {tc.tags.length > 3 && (
-          <span className="text-xs" style={{ color: "#94A3B8" }}>+{tc.tags.length - 3}</span>
-        )}
+        {tc.tags.length > 3 && <span className="text-xs" style={{ color: "#94A3B8" }}>+{tc.tags.length - 3}</span>}
       </div>
+
+      {/* Botão excluir — stopPropagation para não abrir o detalhe */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onDelete(tc); }}
+        className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
+        style={{ color: "#94A3B8" }}
+        title="Excluir caso">
+        <Trash2 size={14} />
+      </button>
     </div>
   );
 }
@@ -83,11 +102,28 @@ export function CaseListClient() {
   const router = useRouter();
   const { cases, count, loading, page, setPage, totalPages,
           search, setSearch, statusFilter, updateStatus,
-          projectFilter, updateProject } = useCaseList();
+          projectFilter, updateProject, refetch } = useCaseList();
   const { projects } = useProjects();
+  const [deleteTarget, setDeleteTarget] = useState<TestCaseRow | null>(null);
 
   const start = count === 0 ? 0 : (page - 1) * 10 + 1;
   const end   = Math.min(page * 10, count);
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    try {
+      await del(`${api.endpoints.testCases}${deleteTarget.id}/`);
+      toast.success(`Caso ${deleteTarget.case_id} excluído com sucesso`);
+      refetch();
+      // Invalida o cache do router para que /dashboard/projetos
+      // re-busque os dados (test_cases_count atualizado) na próxima visita
+      router.refresh();
+    } catch {
+      toast.error("Erro ao excluir caso de teste");
+    } finally {
+      setDeleteTarget(null);
+    }
+  }
 
   return (
     <div style={{ fontFamily: "'DM Sans',system-ui,sans-serif" }}>
@@ -168,7 +204,7 @@ export function CaseListClient() {
               {/* Cabeçalho da tabela */}
               <div className="grid gap-4 px-5 py-3 text-xs font-bold uppercase tracking-wider"
                 style={{
-                  gridTemplateColumns: "90px 1fr 150px 115px 160px",
+                  gridTemplateColumns: GRID,
                   color: "#94A3B8",
                   borderBottom: "1px solid rgba(226,232,240,0.5)",
                   background: "linear-gradient(135deg,rgba(239,246,255,0.6),rgba(248,250,252,0.4))",
@@ -179,9 +215,15 @@ export function CaseListClient() {
                 <span>Projeto</span>
                 <span>Status</span>
                 <span>Tags</span>
+                <span />
               </div>
               {cases.map(tc => (
-                <CaseRow key={tc.id} tc={tc} onClick={() => router.push(`/dashboard/casos/${tc.id}/`)} />
+                <CaseRow
+                  key={tc.id}
+                  tc={tc}
+                  onClick={() => router.push(`/dashboard/casos/${tc.id}/`)}
+                  onDelete={setDeleteTarget}
+                />
               ))}
             </>
           )}
@@ -222,6 +264,16 @@ export function CaseListClient() {
         )}
 
       </div>
+
+      {/* Modal de confirmação de exclusão */}
+      {deleteTarget && (
+        <SimpleDeleteModal
+          title="Excluir Caso de Teste?"
+          description={`${deleteTarget.case_id} — ${deleteTarget.title}`}
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
     </div>
   );
 }

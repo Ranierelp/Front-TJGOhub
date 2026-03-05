@@ -17,6 +17,8 @@ export function useProjectList() {
   const [page, setPage]           = useState(1);
   const [search, setSearch]       = useState("");
   const [statusFilter, setStatus] = useState<StatusFilter>("all");
+  // refreshKey garante re-fetch mesmo quando os outros filtros não mudam
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Busca quando qualquer dependência mudar
   useEffect(() => {
@@ -35,7 +37,7 @@ export function useProjectList() {
       })
       .catch(() => setProjects([]))
       .finally(() => setLoading(false));
-  }, [page, search, statusFilter]);
+  }, [page, search, statusFilter, refreshKey]);
 
   // Resetar para página 1 quando busca/filtro mudar
   const updateSearch = useCallback((value: string) => {
@@ -50,10 +52,13 @@ export function useProjectList() {
 
   const totalPages = Math.max(1, Math.ceil(count / 10));
 
+  const refetch = () => setRefreshKey((k) => k + 1);
+
   return {
     projects, count, loading,
     page, setPage, totalPages,
     search, setSearch: updateSearch,
     statusFilter, setStatusFilter: updateStatus,
+    refetch,
   };
 }
