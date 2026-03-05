@@ -10,7 +10,7 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 168 76% 36%;
+    --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -22,8 +22,23 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 168 76% 36%;
+    --ring: 221 83% 53%;
     --radius: 0.5rem;
+
+    /* Glassmorphism + texto — componentes customizados */
+    --page-bg:           #F0F4FA;
+    --glass-card-bg:     rgba(255,255,255,0.72);
+    --glass-card-border: rgba(255,255,255,0.9);
+    --glass-shadow:      0 1px 4px rgba(0,0,0,0.03), 0 4px 16px rgba(0,0,0,0.02);
+    --glass-field-bg:    rgba(248,250,252,0.4);
+    --glass-inner-border:rgba(226,232,240,0.4);
+    --col-heading:       #0F172A;
+    --col-body:          #1E293B;
+    --col-label:         #6B7280;
+    --col-muted:         #64748B;
+    --col-dim:           #94A3B8;
+    --col-surface:       #F3F4F6;
+    --glass-card-header: linear-gradient(135deg,rgba(239,246,255,0.6),rgba(248,250,252,0.4));
   }
 
   .dark {
@@ -33,7 +48,7 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 168 76% 42%;
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -45,7 +60,22 @@
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 168 76% 42%;
+    --ring: 217 91% 60%;
+
+    /* Glassmorphism + texto — dark */
+    --page-bg:           #0B1628;
+    --glass-card-bg:     rgba(15,23,42,0.75);
+    --glass-card-border: rgba(51,65,85,0.7);
+    --glass-shadow:      0 1px 4px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.3);
+    --glass-field-bg:    rgba(15,23,42,0.5);
+    --glass-inner-border:rgba(51,65,85,0.5);
+    --col-heading:       #F1F5F9;
+    --col-body:          #E2E8F0;
+    --col-label:         #94A3B8;
+    --col-muted:         #94A3B8;
+    --col-dim:           #475569;
+    --col-surface:       #1E293B;
+    --glass-card-header: linear-gradient(135deg,rgba(15,23,42,0.5),rgba(30,41,59,0.3));
   }
 
   * {
@@ -99,6 +129,47 @@
   
   .animate-float {
     animation: float ease-in-out infinite;
+  }
+
+  /* Blobs animados do background glassmorphism */
+  @keyframes float1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%       { transform: translate(-30px, 20px) scale(1.05); }
+  }
+  @keyframes float2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%       { transform: translate(20px, -30px) scale(1.08); }
+  }
+  @keyframes float3 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%       { transform: translate(-20px, -15px) scale(1.03); }
+  }
+}
+
+/* Inputs glassmorphism — usados na tela de criar/editar caso de teste */
+@layer components {
+  .glass-input {
+    background: rgba(248, 250, 252, 0.8);
+    border: 1px solid rgba(226, 232, 240, 0.7);
+    color: var(--col-body);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+  .glass-input::placeholder {
+    color: var(--col-dim);
+  }
+  .glass-input:focus {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
+    background: rgba(255, 255, 255, 0.95);
+  }
+  .dark .glass-input {
+    background: rgba(15, 23, 42, 0.6);
+    border-color: rgba(51, 65, 85, 0.7);
+  }
+  .dark .glass-input:focus {
+    background: rgba(15, 23, 42, 0.9);
+    border-color: rgba(59, 130, 246, 0.5);
   }
 }
 
