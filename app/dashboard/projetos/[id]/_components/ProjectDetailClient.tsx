@@ -68,8 +68,12 @@ export function ProjectDetailClient({ id }: { id: string }) {
                   {project.name}
                 </h1>
                 <span className="text-xs font-semibold px-2.5 py-1 rounded-lg"
-                  style={{ background: project.is_active ? "rgba(209,250,229,0.6)" : "rgba(241,245,249,0.6)", color: project.is_active ? "#10B981" : "#64748B" }}>
-                  {project.is_active ? "⚡ Ativo" : "📦 Arquivado"}
+                  style={{
+                    background: project.is_active ? "rgba(209,250,229,0.6)" : "rgba(254,226,226,0.6)",
+                    color: project.is_active ? "#10B981" : "#EF4444",
+                    border: `1px solid ${project.is_active ? "rgba(167,243,208,0.5)" : "rgba(252,165,165,0.5)"}`,
+                  }}>
+                  {project.is_active ? "⚡ Ativo" : "🔴 Arquivado"}
                 </span>
               </div>
               <p className="text-xs font-mono mt-0.5" style={{ color: "var(--col-dim)" }}>/{project.slug}</p>
