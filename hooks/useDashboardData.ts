@@ -85,6 +85,7 @@ interface ApiRun {
 interface ApiResult {
   id:              string;
   result_id:       string;
+  title:           string;
   test_case_title: string | null;
   status:          "PASSED" | "FAILED" | "SKIPPED" | "FLAKY";
 }
@@ -118,7 +119,7 @@ function formatDateLabel(isoDate: string | null): string {
 // Paralelo Python: Counter(r.title for r in results).most_common(limit)
 function aggregateByTitle(results: ApiResult[], limit: number): { name: string; count: number }[] {
   const counts = results.reduce<Record<string, number>>((acc, r) => {
-    const name = r.test_case_title || r.result_id;
+    const name = r.title || r.test_case_title || r.result_id;
     acc[name] = (acc[name] ?? 0) + 1;
     return acc;
   }, {});
