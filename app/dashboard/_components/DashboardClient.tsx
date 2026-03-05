@@ -66,11 +66,11 @@ export function DashboardClient() {
 
       {/* ── BARRA DE FILTRO POR PROJETO ─────────────────────────────────── */}
       <div
-        className="flex items-center gap-3 bg-white rounded-xl border border-gray-100 px-4 py-3 flex-wrap"
+        className="flex items-center gap-3 bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 px-4 py-3 flex-wrap"
         style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
       >
         <FolderOpen size={16} className="text-blue-500 flex-shrink-0" />
-        <span className="text-sm font-medium text-gray-600 flex-shrink-0">Projeto:</span>
+        <span className="text-sm font-medium text-gray-600 dark:text-slate-300 flex-shrink-0">Projeto:</span>
 
         {/*
           Select de projetos — controlado pelo estado projectId.
@@ -83,8 +83,8 @@ export function DashboardClient() {
           value={projectId}
           onChange={(e) => setProjectId(e.target.value)}
           disabled={projectsLoading}
-          className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700
-                     bg-white focus:outline-none focus:ring-2 focus:ring-blue-500
+          className="text-sm border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-1.5 text-gray-700 dark:text-slate-200
+                     bg-white dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500
                      disabled:opacity-50 min-w-48"
         >
           <option value="">Todos os projetos</option>
@@ -99,8 +99,8 @@ export function DashboardClient() {
         {projectId && (
           <button
             onClick={() => setProjectId("")}
-            className="flex items-center gap-1 text-xs text-gray-400
-                       hover:text-gray-600 transition-colors"
+            className="flex items-center gap-1 text-xs text-gray-400 dark:text-slate-500
+                       hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
             aria-label="Limpar filtro de projeto"
           >
             <X size={13} />
