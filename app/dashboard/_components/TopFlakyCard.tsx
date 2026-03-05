@@ -37,13 +37,13 @@ export function TopFlakyCard({ flaky }: TopFlakyCardProps) {
 
   return (
     <div
-      className="bg-white rounded-xl border border-gray-100 p-5 flex flex-col gap-3"
+      className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-5 flex flex-col gap-3"
       style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
     >
       {/* Cabeçalho com ícone de raio */}
       <div className="flex items-center gap-2">
         <Zap size={14} className="text-yellow-500 flex-shrink-0" />
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+        <span className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wide">
           Top Flaky Tests
         </span>
       </div>
@@ -63,10 +63,10 @@ export function TopFlakyCard({ flaky }: TopFlakyCardProps) {
           return (
             <li key={item.name} className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-700 truncate" title={item.name}>
+                <p className="text-sm text-gray-700 dark:text-slate-300 truncate" title={item.name}>
                   {item.name}
                 </p>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">
                   {item.failures} falhas em {item.total_runs} runs
                 </p>
               </div>
@@ -83,7 +83,7 @@ export function TopFlakyCard({ flaky }: TopFlakyCardProps) {
         })}
 
         {flaky.length === 0 && (
-          <li className="text-sm text-gray-400 text-center py-6">
+          <li className="text-sm text-gray-400 dark:text-slate-500 text-center py-6">
             Nenhum teste instável
           </li>
         )}
