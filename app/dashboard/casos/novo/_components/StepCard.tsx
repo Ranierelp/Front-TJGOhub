@@ -2,6 +2,8 @@
 
 import { useRef, useState } from "react";
 import { Trash2, ImagePlus, X } from "lucide-react";
+import Zoom from "react-medium-image-zoom";
+import "react-medium-image-zoom/dist/styles.css";
 import type { PendingStep } from "@/hooks/useCreateCase";
 
 interface Props {
@@ -39,11 +41,11 @@ export function StepCard({ step, index, onUpdate, onRemove }: Props) {
     <div
       className="rounded-2xl overflow-hidden"
       style={{
-        background: "rgba(255,255,255,0.72)",
-        backdropFilter: "blur(24px)",
+        background:           "var(--glass-card-bg)",
+        backdropFilter:       "blur(24px)",
         WebkitBackdropFilter: "blur(24px)",
-        border: hovered ? "1px solid rgba(147,197,253,0.6)" : "1px solid rgba(255,255,255,0.9)",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.03),0 4px 16px rgba(0,0,0,0.02)",
+        border:     hovered ? "1px solid rgba(147,197,253,0.6)" : "1px solid var(--glass-card-border)",
+        boxShadow:            "var(--glass-shadow)",
         transition: "border-color 0.3s",
       }}
       onMouseEnter={() => setHovered(true)}
@@ -51,8 +53,8 @@ export function StepCard({ step, index, onUpdate, onRemove }: Props) {
     >
       {/* Cabeçalho do passo */}
       <div className="flex items-center gap-3 px-5 py-3.5" style={{
-        background: "linear-gradient(135deg,rgba(239,246,255,0.6),rgba(248,250,252,0.4))",
-        borderBottom: "1px solid rgba(226,232,240,0.4)",
+        background:   "var(--glass-card-header)",
+        borderBottom: "1px solid var(--glass-inner-border)",
       }}>
         {/* Handle de drag (visual) */}
         <svg className="cursor-grab flex-shrink-0" width="12" height="12" viewBox="0 0 24 24"
@@ -72,7 +74,7 @@ export function StepCard({ step, index, onUpdate, onRemove }: Props) {
           {index + 1}
         </span>
 
-        <span className="text-sm font-bold flex-1" style={{ color: "#1E293B" }}>
+        <span className="text-sm font-bold flex-1" style={{ color: "var(--col-body)" }}>
           Passo {index + 1}
         </span>
 
@@ -90,12 +92,14 @@ export function StepCard({ step, index, onUpdate, onRemove }: Props) {
         {/* Zona de imagem */}
         {step.preview ? (
           <div className="relative">
-            <img src={step.preview} alt={`Passo ${index + 1}`}
-              className="w-full max-h-52 object-contain rounded-xl"
-              style={{ border: "1px solid rgba(226,232,240,0.5)", background: "rgba(248,250,252,0.4)" }} />
+            <Zoom>
+              <img src={step.preview} alt={`Passo ${index + 1}`}
+                className="w-full max-h-52 object-contain rounded-xl cursor-zoom-in"
+                style={{ border: "1px solid var(--glass-inner-border)", background: "var(--glass-field-bg)" }} />
+            </Zoom>
             <button type="button" onClick={removeImage}
               className="absolute top-2 right-2 rounded-full p-1 transition-all"
-              style={{ background: "rgba(255,255,255,0.9)", border: "1px solid rgba(226,232,240,0.5)", color: "#94A3B8" }}
+              style={{ background: "var(--glass-card-bg)", border: "1px solid var(--glass-inner-border)", color: "var(--col-dim)" }}
               onMouseEnter={e => { e.currentTarget.style.color = "#EF4444"; }}
               onMouseLeave={e => { e.currentTarget.style.color = "#94A3B8"; }}>
               <X className="h-3 w-3" />
@@ -104,22 +108,22 @@ export function StepCard({ step, index, onUpdate, onRemove }: Props) {
         ) : (
           <div
             className="rounded-xl p-7 text-center cursor-pointer transition-all"
-            style={{ border: "2px dashed rgba(203,213,225,0.6)", background: "rgba(248,250,252,0.4)" }}
+            style={{ border: "2px dashed var(--glass-inner-border)", background: "var(--glass-field-bg)" }}
             onClick={() => inputRef.current?.click()}
             onDrop={onDrop}
             onDragOver={e => e.preventDefault()}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(59,130,246,0.4)"; e.currentTarget.style.background = "rgba(239,246,255,0.5)"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(203,213,225,0.6)"; e.currentTarget.style.background = "rgba(248,250,252,0.4)"; }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(59,130,246,0.4)"; e.currentTarget.style.background = "rgba(239,246,255,0.1)"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--glass-inner-border)"; e.currentTarget.style.background = "var(--glass-field-bg)"; }}
           >
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
               style={{ background: "linear-gradient(135deg,rgba(219,234,254,0.8),rgba(191,219,254,0.5))", color: "#3B82F6", border: "1px solid rgba(147,197,253,0.3)" }}>
               <ImagePlus className="h-5 w-5" />
             </div>
-            <p className="text-sm font-medium" style={{ color: "#64748B" }}>
+            <p className="text-sm font-medium" style={{ color: "var(--col-muted)" }}>
               Arraste imagens aqui ou{" "}
               <span className="font-bold" style={{ color: "#2563EB" }}>clique para selecionar</span>
             </p>
-            <p className="text-xs mt-1.5" style={{ color: "#94A3B8" }}>PNG, JPG, GIF • até 5MB</p>
+            <p className="text-xs mt-1.5" style={{ color: "var(--col-dim)" }}>PNG, JPG, GIF • até 5MB</p>
           </div>
         )}
 
@@ -128,7 +132,7 @@ export function StepCard({ step, index, onUpdate, onRemove }: Props) {
 
         {/* Descrição */}
         <div>
-          <label className="block text-xs font-semibold mb-1.5 tracking-wide" style={{ color: "#6B7280" }}>
+          <label className="block text-xs font-semibold mb-1.5 tracking-wide" style={{ color: "var(--col-label)" }}>
             Descrição do Passo
           </label>
           <textarea
