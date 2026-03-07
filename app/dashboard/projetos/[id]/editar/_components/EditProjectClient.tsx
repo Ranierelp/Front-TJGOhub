@@ -10,14 +10,16 @@ import { useRouter } from "next/navigation";
 import { Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
-import { getProject, updateProject, type ProjectDetail } from "@/lib/api/projects";
+import { getProject, updateProject, archiveProject, type ProjectDetail } from "@/lib/api/projects";
 import { ProjectFormClient } from "../../../_components/ProjectFormClient";
+import { ArchiveModal } from "../../../_components/ProjectModals";
 
 export function EditProjectClient({ id }: { id: string }) {
   const router = useRouter();
-  const [project, setProject]   = useState<ProjectDetail | null>(null);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState<string | null>(null);
+  const [project, setProject]     = useState<ProjectDetail | null>(null);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState<string | null>(null);
+  const [archiving, setArchiving] = useState(false);
 
   useEffect(() => {
     getProject(id)
@@ -25,6 +27,19 @@ export function EditProjectClient({ id }: { id: string }) {
       .catch(() => setError("Projeto não encontrado"))
       .finally(() => setLoading(false));
   }, [id]);
+
+  async function handleArchive() {
+    if (!project) return;
+    try {
+      await archiveProject(project.id);
+      toast.success("Projeto arquivado com sucesso!");
+      router.push("/dashboard/projetos");
+    } catch {
+      toast.error("Erro ao arquivar projeto");
+    } finally {
+      setArchiving(false);
+    }
+  }
 
   async function handleSubmit(data: { name: string; description: string }) {
     try {
@@ -51,11 +66,21 @@ export function EditProjectClient({ id }: { id: string }) {
   );
 
   return (
-    <ProjectFormClient
-      mode="edit"
-      initialData={{ name: project.name, description: project.description, slug: project.slug }}
-      onSubmit={handleSubmit}
-      onCancel={() => router.push(`/dashboard/projetos/${id}`)}
-    />
+    <>
+      <ProjectFormClient
+        mode="edit"
+        initialData={{ name: project.name, description: project.description, slug: project.slug }}
+        onSubmit={handleSubmit}
+        onCancel={() => router.push(`/dashboard/projetos/${id}`)}
+        onArchive={() => setArchiving(true)}
+      />
+      {archiving && (
+        <ArchiveModal
+          project={project as any}
+          onConfirm={handleArchive}
+          onCancel={() => setArchiving(false)}
+        />
+      )}
+    </>
   );
 }
