@@ -2,6 +2,8 @@
 
 import { useRouter }                    from "next/navigation";
 import { ArrowLeft, Pencil, Trash2 }    from "lucide-react";
+import Zoom                             from "react-medium-image-zoom";
+import "react-medium-image-zoom/dist/styles.css";
 
 import {
   GlassCard, SLabel, FLabel,
@@ -97,12 +99,14 @@ function AttachmentCard({ attachment, index }: { attachment: Attachment; index: 
 
       <div className="p-5 space-y-4">
         {attachment.attachment_type === "IMAGE" && attachment.file && (
-          <img
-            src={imgSrc}
-            alt={attachment.title}
-            className="w-full max-h-52 object-contain rounded-xl"
-            style={{ border: "1px solid var(--glass-inner-border)", background: "var(--glass-field-bg)" }}
-          />
+          <Zoom>
+            <img
+              src={imgSrc}
+              alt={attachment.title}
+              className="w-full max-h-52 object-contain rounded-xl cursor-zoom-in"
+              style={{ border: "1px solid var(--glass-inner-border)", background: "var(--glass-field-bg)" }}
+            />
+          </Zoom>
         )}
         {attachment.description && (
           <div>
