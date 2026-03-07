@@ -9,6 +9,7 @@ import { useCaseList, type TestCaseRow } from "@/hooks/useCaseList";
 import { useProjects }                   from "@/hooks/useProjects";
 import { del, api }                      from "@/lib/api";
 import { SimpleDeleteModal }             from "@/app/dashboard/projetos/_components/ProjectModals";
+import { GlassCard, CasePageBackground } from "@/app/dashboard/casos/_components/CaseShared";
 
 // ── Configuração visual dos status ─────────────────────────────────────────
 const STATUS = {
@@ -20,18 +21,6 @@ const STATUS = {
 // Colunas: ID | Título | Projeto | Status | Tags | Excluir
 const GRID = "90px 1fr 150px 115px 1fr 32px";
 
-// ── Mini-componentes ────────────────────────────────────────────────────────
-function GlassCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={`rounded-2xl ${className}`} style={{
-      background: "rgba(255,255,255,0.72)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
-      border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 1px 4px rgba(0,0,0,0.03),0 4px 16px rgba(0,0,0,0.02)",
-    }}>
-      {children}
-    </div>
-  );
-}
-
 interface CaseRowProps {
   tc: TestCaseRow;
   onClick: () => void;
@@ -39,19 +28,14 @@ interface CaseRowProps {
 }
 
 function CaseRow({ tc, onClick, onDelete }: CaseRowProps) {
-  const [hovered, setHovered] = useState(false);
   const s = STATUS[tc.status] ?? STATUS.DRAFT;
   return (
     <div
-      className="grid gap-4 px-5 py-3.5 items-center"
+      className="grid gap-4 px-5 py-3.5 items-center hover:bg-blue-50/40 dark:hover:bg-slate-800/50 transition-colors"
       style={{
         gridTemplateColumns: GRID,
-        borderBottom: "1px solid rgba(226,232,240,0.3)",
-        background: hovered ? "rgba(239,246,255,0.4)" : "transparent",
-        transition: "background 0.15s",
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}>
+        borderBottom: "1px solid var(--glass-inner-border)",
+      }}>
 
       {/* case_id */}
       <span onClick={onClick} className="cursor-pointer text-xs font-mono font-bold px-2 py-1 rounded-lg inline-block"
@@ -61,12 +45,12 @@ function CaseRow({ tc, onClick, onDelete }: CaseRowProps) {
 
       {/* título + módulo */}
       <div onClick={onClick} className="min-w-0 cursor-pointer">
-        <p className="text-sm font-semibold truncate" style={{ color: "#1E293B" }}>{tc.title}</p>
-        {tc.module && <p className="text-xs truncate mt-0.5" style={{ color: "#94A3B8" }}>{tc.module}</p>}
+        <p className="text-sm font-semibold truncate" style={{ color: "var(--col-body)" }}>{tc.title}</p>
+        {tc.module && <p className="text-xs truncate mt-0.5" style={{ color: "var(--col-dim)" }}>{tc.module}</p>}
       </div>
 
       {/* projeto */}
-      <span onClick={onClick} className="text-xs truncate cursor-pointer" style={{ color: "#64748B" }}>{tc.project_name}</span>
+      <span onClick={onClick} className="text-xs truncate cursor-pointer" style={{ color: "var(--col-muted)" }}>{tc.project_name}</span>
 
       {/* status */}
       <span onClick={onClick} className="cursor-pointer inline-flex items-center justify-center text-xs font-semibold px-2.5 py-1 rounded-lg"
@@ -78,18 +62,18 @@ function CaseRow({ tc, onClick, onDelete }: CaseRowProps) {
       <div onClick={onClick} className="flex flex-wrap gap-1 cursor-pointer">
         {tc.tags.slice(0, 3).map(tag => (
           <span key={tag.id} className="text-xs px-2 py-0.5 rounded-full"
-            style={{ background: "rgba(241,245,249,0.8)", color: "#64748B", border: "1px solid rgba(226,232,240,0.7)" }}>
+            style={{ background: "var(--glass-field-bg)", color: "var(--col-muted)", border: "1px solid var(--glass-inner-border)" }}>
             {tag.name}
           </span>
         ))}
-        {tc.tags.length > 3 && <span className="text-xs" style={{ color: "#94A3B8" }}>+{tc.tags.length - 3}</span>}
+        {tc.tags.length > 3 && <span className="text-xs" style={{ color: "var(--col-dim)" }}>+{tc.tags.length - 3}</span>}
       </div>
 
       {/* Botão excluir — stopPropagation para não abrir o detalhe */}
       <button
         onClick={(e) => { e.stopPropagation(); onDelete(tc); }}
         className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
-        style={{ color: "#94A3B8" }}
+        style={{ color: "var(--col-dim)" }}
         title="Excluir caso">
         <Trash2 size={14} />
       </button>
@@ -115,8 +99,6 @@ export function CaseListClient() {
       await del(`${api.endpoints.testCases}${deleteTarget.id}/`);
       toast.success(`Caso ${deleteTarget.case_id} excluído com sucesso`);
       refetch();
-      // Invalida o cache do router para que /dashboard/projetos
-      // re-busque os dados (test_cases_count atualizado) na próxima visita
       router.refresh();
     } catch {
       toast.error("Erro ao excluir caso de teste");
@@ -128,20 +110,15 @@ export function CaseListClient() {
   return (
     <div style={{ fontFamily: "'DM Sans',system-ui,sans-serif" }}>
 
-      {/* Fundo animado */}
-      <div className="fixed inset-0 -z-10" style={{ background: "#F0F4FA" }}>
-        <div className="absolute" style={{ width: 600, height: 600, top: -100, right: -100, background: "radial-gradient(circle,rgba(59,130,246,0.08) 0%,transparent 70%)", borderRadius: "50%", filter: "blur(40px)", animation: "float1 20s ease-in-out infinite" }} />
-        <div className="absolute" style={{ width: 500, height: 500, bottom: -50, left: -100, background: "radial-gradient(circle,rgba(99,102,241,0.06) 0%,transparent 70%)", borderRadius: "50%", filter: "blur(40px)", animation: "float2 25s ease-in-out infinite" }} />
-        <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(rgba(148,163,184,0.12) 1px,transparent 1px)", backgroundSize: "24px 24px" }} />
-      </div>
+      <CasePageBackground />
 
       <div className="flex flex-col gap-5">
 
         {/* Cabeçalho */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium" style={{ color: "#94A3B8" }}>Casos de Teste</p>
-            <h1 className="text-xl font-extrabold flex items-center gap-2" style={{ color: "#0F172A", letterSpacing: "-0.03em" }}>
+            <p className="text-xs font-medium" style={{ color: "var(--col-dim)" }}>Casos de Teste</p>
+            <h1 className="text-xl font-extrabold flex items-center gap-2" style={{ color: "var(--col-heading)", letterSpacing: "-0.03em" }}>
               Listagem
               {count > 0 && (
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold"
@@ -164,7 +141,7 @@ export function CaseListClient() {
         <GlassCard className="p-4">
           <div className="flex flex-wrap gap-3">
             <div className="relative flex-1 min-w-52">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#94A3B8" }} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "var(--col-dim)" }} />
               <input value={search} onChange={e => setSearch(e.target.value)}
                 placeholder="Buscar por ID, título, módulo..."
                 className="glass-input w-full pl-9 pr-3.5 py-2 rounded-xl text-sm" />
@@ -196,8 +173,8 @@ export function CaseListClient() {
                 style={{ background: "linear-gradient(135deg,rgba(219,234,254,0.8),rgba(191,219,254,0.5))", border: "1px solid rgba(147,197,253,0.3)" }}>
                 <FileText className="h-6 w-6" style={{ color: "#3B82F6" }} />
               </div>
-              <p className="text-sm font-medium" style={{ color: "#64748B" }}>Nenhum caso encontrado</p>
-              <p className="text-xs" style={{ color: "#94A3B8" }}>Ajuste os filtros ou crie um novo caso de teste</p>
+              <p className="text-sm font-medium" style={{ color: "var(--col-muted)" }}>Nenhum caso encontrado</p>
+              <p className="text-xs" style={{ color: "var(--col-dim)" }}>Ajuste os filtros ou crie um novo caso de teste</p>
             </div>
           ) : (
             <>
@@ -205,9 +182,9 @@ export function CaseListClient() {
               <div className="grid gap-4 px-5 py-3 text-xs font-bold uppercase tracking-wider"
                 style={{
                   gridTemplateColumns: GRID,
-                  color: "#94A3B8",
-                  borderBottom: "1px solid rgba(226,232,240,0.5)",
-                  background: "linear-gradient(135deg,rgba(239,246,255,0.6),rgba(248,250,252,0.4))",
+                  color: "var(--col-dim)",
+                  borderBottom: "1px solid var(--glass-inner-border)",
+                  background: "var(--glass-card-header)",
                   borderRadius: "16px 16px 0 0",
                 }}>
                 <span>ID</span>
@@ -232,31 +209,29 @@ export function CaseListClient() {
         {/* Paginação */}
         {!loading && count > 10 && (
           <div className="flex items-center justify-between px-1">
-            <span className="text-xs" style={{ color: "#94A3B8" }}>
+            <span className="text-xs" style={{ color: "var(--col-dim)" }}>
               Mostrando {start}–{end} de {count}
             </span>
             <div className="flex items-center gap-2">
               <button disabled={page === 1} onClick={() => setPage(p => p - 1)}
-                className="px-4 py-1.5 rounded-xl text-xs font-medium transition-all"
-                style={{
-                  background: page === 1 ? "rgba(241,245,249,0.4)" : "rgba(255,255,255,0.8)",
-                  color: page === 1 ? "#CBD5E1" : "#475569",
-                  border: "1px solid rgba(226,232,240,0.7)",
-                  cursor: page === 1 ? "not-allowed" : "pointer",
-                }}>
+                className={`px-4 py-1.5 rounded-xl text-xs font-medium transition-all border ${
+                  page === 1
+                    ? "text-slate-300 dark:text-slate-600 bg-slate-50/40 dark:bg-slate-800/40 border-slate-200/70 dark:border-slate-700 cursor-not-allowed"
+                    : "bg-white/80 dark:bg-slate-800/80 border-slate-200/70 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700"
+                }`}
+                style={{ color: page === 1 ? undefined : "var(--col-muted)" }}>
                 ← Anterior
               </button>
-              <span className="text-xs font-medium px-2" style={{ color: "#64748B" }}>
+              <span className="text-xs font-medium px-2" style={{ color: "var(--col-muted)" }}>
                 {page} / {totalPages}
               </span>
               <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)}
-                className="px-4 py-1.5 rounded-xl text-xs font-medium transition-all"
-                style={{
-                  background: page === totalPages ? "rgba(241,245,249,0.4)" : "rgba(255,255,255,0.8)",
-                  color: page === totalPages ? "#CBD5E1" : "#475569",
-                  border: "1px solid rgba(226,232,240,0.7)",
-                  cursor: page === totalPages ? "not-allowed" : "pointer",
-                }}>
+                className={`px-4 py-1.5 rounded-xl text-xs font-medium transition-all border ${
+                  page === totalPages
+                    ? "text-slate-300 dark:text-slate-600 bg-slate-50/40 dark:bg-slate-800/40 border-slate-200/70 dark:border-slate-700 cursor-not-allowed"
+                    : "bg-white/80 dark:bg-slate-800/80 border-slate-200/70 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700"
+                }`}
+                style={{ color: page === totalPages ? undefined : "var(--col-muted)" }}>
                 Próxima →
               </button>
             </div>
