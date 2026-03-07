@@ -73,13 +73,13 @@ function CreateEnvModal({ projectId, onSuccess, onCancel }: {
           </div>
           <div className="flex gap-3 pt-1">
             <button type="button" onClick={onCancel} className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-              style={{ border: "1px solid rgba(226,232,240,0.7)", color: "var(--col-muted)", background: "transparent" }}>
+              style={{ border: "1px solid var(--glass-inner-border)", color: "var(--col-muted)", background: "transparent" }}>
               Cancelar
             </button>
             <button type="submit" disabled={!isValid || submitting}
               className="flex-1 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
               style={{
-                background: isValid ? "linear-gradient(135deg,#2563EB,#3B82F6)" : "rgba(226,232,240,0.5)",
+                background: isValid ? "linear-gradient(135deg,#2563EB,#3B82F6)" : "var(--glass-inner-border)",
                 color: isValid ? "white" : "var(--col-dim)",
                 cursor: isValid ? "pointer" : "not-allowed",
               }}>
