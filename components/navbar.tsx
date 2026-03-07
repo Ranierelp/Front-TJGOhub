@@ -8,6 +8,7 @@ import { useState } from "react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { siteConfig } from "@/config/site";
+import { ThemeSwitcher } from "@/components/common/ThemeSwitcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -157,6 +158,9 @@ export const Navbar = () => {
               <Bell size={18} />
             </button>
 
+            {/* Toggle de tema claro/escuro */}
+            <ThemeSwitcher />
+
             {/*
               CONCEITO 6: Renderização condicional com &&
 
@@ -258,7 +262,7 @@ export const Navbar = () => {
 
         Paralelo Django: {% if request.path == item.href %}class="active"{% endif %}
       */}
-      <div className="hidden sm:block bg-white border-b border-gray-200">
+      <div className="hidden sm:block bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700">
         <div className="mx-auto max-w-7xl px-6">
           <div className="flex items-center gap-1">
             {siteConfig.navItems.map((item) => {
@@ -275,8 +279,8 @@ export const Navbar = () => {
                   className={[
                     "px-4 py-3.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
                     isActive
-                      ? "text-blue-600 border-blue-600"
-                      : "text-gray-500 border-transparent hover:text-blue-600 hover:border-blue-300",
+                      ? "text-blue-600 border-blue-600 dark:text-blue-400 dark:border-blue-400"
+                      : "text-gray-500 dark:text-slate-400 border-transparent hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300",
                   ].join(" ")}
                 >
                   {item.label}
@@ -294,7 +298,7 @@ export const Navbar = () => {
         Este bloco aparece abaixo da barra azul quando o hamburguer é clicado.
       */}
       {isMenuOpen && (
-        <div className="sm:hidden bg-white border-b border-gray-200 px-4 py-2 space-y-0.5">
+        <div className="sm:hidden bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 px-4 py-2 space-y-0.5">
           {siteConfig.navItems.map((item) => {
             const isActive =
               item.href === "/dashboard"
@@ -308,8 +312,8 @@ export const Navbar = () => {
                 className={[
                   "block text-sm py-2.5 px-2 rounded-md font-medium transition-colors",
                   isActive
-                    ? "text-blue-600 bg-blue-50"
-                    : "text-gray-600 hover:text-blue-600",
+                    ? "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20"
+                    : "text-gray-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400",
                 ].join(" ")}
                 onClick={() => setIsMenuOpen(false)}
               >
