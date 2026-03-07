@@ -11,7 +11,7 @@ import { StepCard }                   from "./StepCard";
 import { useCreateCase, PendingStep } from "@/hooks/useCreateCase";
 // GlassCard, SLabel, FLabel, ErrMsg, Accordion agora vêm do arquivo compartilhado.
 // Antes estavam definidos aqui mesmo — duplicados no CaseDetailClient.
-import { GlassCard, SLabel, FLabel, ErrMsg, Accordion } from "@/app/dashboard/casos/_components/CaseShared";
+import { GlassCard, SLabel, FLabel, ErrMsg, Accordion, CasePageBackground } from "@/app/dashboard/casos/_components/CaseShared";
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 const schema = z.object({
@@ -64,12 +64,7 @@ export function CreateCaseClient() {
 
   return (
     <div style={{ fontFamily: "'DM Sans',system-ui,sans-serif" }}>
-      {/* Fundo animado */}
-      <div className="fixed inset-0 -z-10" style={{ background: "#F0F4FA" }}>
-        <div className="absolute" style={{ width: 600, height: 600, top: -100, right: -100, background: "radial-gradient(circle,rgba(59,130,246,0.08) 0%,transparent 70%)", borderRadius: "50%", filter: "blur(40px)", animation: "float1 20s ease-in-out infinite" }} />
-        <div className="absolute" style={{ width: 500, height: 500, bottom: -50, left: -100, background: "radial-gradient(circle,rgba(99,102,241,0.06) 0%,transparent 70%)", borderRadius: "50%", filter: "blur(40px)", animation: "float2 25s ease-in-out infinite" }} />
-        <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(rgba(148,163,184,0.12) 1px,transparent 1px)", backgroundSize: "24px 24px" }} />
-      </div>
+      <CasePageBackground />
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
         {/* Cabeçalho */}
@@ -83,8 +78,8 @@ export function CreateCaseClient() {
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div>
-              <p className="text-xs font-medium" style={{ color: "#94A3B8" }}>Caso de Teste</p>
-              <h1 className="text-sm font-bold" style={{ color: "#0F172A" }}>Cadastro / Edição</h1>
+              <p className="text-xs font-medium" style={{ color: "var(--col-dim)" }}>Caso de Teste</p>
+              <h1 className="text-sm font-bold" style={{ color: "var(--col-heading)" }}>Cadastro / Edição</h1>
             </div>
           </div>
           <div className="flex items-center gap-2.5">
@@ -220,7 +215,7 @@ export function CreateCaseClient() {
             {/* Cabeçalho dos passos */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <h2 className="text-lg font-extrabold" style={{ color: "#0F172A", letterSpacing: "-0.03em" }}>
+                <h2 className="text-lg font-extrabold" style={{ color: "var(--col-heading)", letterSpacing: "-0.03em" }}>
                   Passos do Teste
                 </h2>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold"
