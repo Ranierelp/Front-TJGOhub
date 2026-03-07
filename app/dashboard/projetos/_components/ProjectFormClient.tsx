@@ -7,8 +7,8 @@
 // O componente pai controla o submit e o cancelamento.
 // =============================================================================
 
-import { useState, useEffect } from "react";
-import { ArrowLeft, Link2, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Link2, AlertTriangle, CheckCircle2, Loader2, Archive } from "lucide-react";
 import { GlassBackground, GlassCard } from "./GlassBackground";
 
 // Gera slug legível: "Meu Projeto" → "meu-projeto"
@@ -27,9 +27,11 @@ interface Props {
   initialData?: { name: string; description: string; slug: string };
   onSubmit: (data: { name: string; description: string }) => Promise<void>;
   onCancel: () => void;
+  // Opcional — só aparece na tela de edição; o pai controla o modal de confirmação
+  onArchive?: () => void;
 }
 
-export function ProjectFormClient({ mode, initialData, onSubmit, onCancel }: Props) {
+export function ProjectFormClient({ mode, initialData, onSubmit, onCancel, onArchive }: Props) {
   const [name, setName]           = useState(initialData?.name ?? "");
   const [description, setDesc]    = useState(initialData?.description ?? "");
   const [submitting, setSubmitting] = useState(false);
@@ -65,13 +67,23 @@ export function ProjectFormClient({ mode, initialData, onSubmit, onCancel }: Pro
           </div>
           <div className="flex gap-3">
             <button onClick={onCancel} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-              style={{ border: "1px solid rgba(226,232,240,0.7)", color: "var(--col-muted)", background: "transparent" }}>
+              style={{ border: "1px solid var(--glass-inner-border)", color: "var(--col-muted)", background: "transparent" }}>
               <ArrowLeft size={14} /> Cancelar
             </button>
+            {/* Botão arquivar — só aparece na tela de edição */}
+            {onArchive && (
+              <button type="button" onClick={onArchive}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                style={{ border: "1px solid rgba(245,158,11,0.4)", color: "#F59E0B", background: "rgba(254,243,199,0.4)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(254,243,199,0.7)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(254,243,199,0.4)"; }}>
+                <Archive size={14} /> Arquivar
+              </button>
+            )}
             <button type="submit" form="project-form" disabled={!isValid || submitting}
               className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold text-white transition-all"
               style={{
-                background: isValid ? "linear-gradient(135deg,#2563EB,#3B82F6)" : "rgba(226,232,240,0.5)",
+                background: isValid ? "linear-gradient(135deg,#2563EB,#3B82F6)" : "var(--glass-inner-border)",
                 opacity: isValid ? 1 : 0.5, cursor: isValid ? "pointer" : "not-allowed",
                 boxShadow: isValid ? "0 2px 10px rgba(37,99,235,0.25)" : "none",
                 pointerEvents: isValid ? "auto" : "none",
@@ -136,7 +148,7 @@ export function ProjectFormClient({ mode, initialData, onSubmit, onCancel }: Pro
           <GlassCard className="p-6">
             <h2 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: "#3B82F6" }}>👁️ Preview do Card</h2>
             <div className="rounded-xl p-4 space-y-3"
-              style={{ background: "rgba(248,250,252,0.6)", border: "1px solid rgba(226,232,240,0.5)" }}>
+              style={{ background: "var(--glass-field-bg)", border: "1px solid var(--glass-inner-border)" }}>
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
                   style={{ background: "linear-gradient(135deg,rgba(219,234,254,0.8),rgba(191,219,254,0.5))" }}>📂</div>

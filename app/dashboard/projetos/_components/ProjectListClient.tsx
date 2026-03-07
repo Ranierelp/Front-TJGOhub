@@ -115,7 +115,7 @@ export function ProjectListClient() {
               <input value={search} onChange={(e) => setSearch(e.target.value)}
                 placeholder="Buscar projetos..." className="glass-input w-full pl-9 pr-3.5 py-2 rounded-xl text-sm" />
             </div>
-            <div className="flex rounded-xl overflow-hidden" style={{ border: "1px solid rgba(226,232,240,0.7)" }}>
+            <div className="flex rounded-xl overflow-hidden" style={{ border: "1px solid var(--glass-inner-border)" }}>
               {FILTERS.map((f) => (
                 <button key={f.value} onClick={() => setStatusFilter(f.value)}
                   className="px-4 py-2 text-sm font-medium transition-all"
@@ -127,7 +127,7 @@ export function ProjectListClient() {
                 </button>
               ))}
             </div>
-            <div className="flex rounded-xl overflow-hidden" style={{ border: "1px solid rgba(226,232,240,0.7)" }}>
+            <div className="flex rounded-xl overflow-hidden" style={{ border: "1px solid var(--glass-inner-border)" }}>
               {(["grid", "list"] as ViewMode[]).map((m) => (
                 <button key={m} onClick={() => setViewMode(m)}
                   className="px-3 py-2 transition-all"
@@ -172,12 +172,12 @@ export function ProjectListClient() {
             <div className="flex gap-2">
               <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}
                 className="px-4 py-1.5 rounded-xl text-xs font-medium"
-                style={{ background: "rgba(255,255,255,0.8)", border: "1px solid rgba(226,232,240,0.7)", color: page === 1 ? "var(--col-dim)" : "var(--col-muted)", cursor: page === 1 ? "not-allowed" : "pointer" }}>
+                style={{ background: "var(--glass-card-bg)", border: "1px solid var(--glass-inner-border)", color: page === 1 ? "var(--col-dim)" : "var(--col-muted)", cursor: page === 1 ? "not-allowed" : "pointer" }}>
                 ← Anterior
               </button>
               <button disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}
                 className="px-4 py-1.5 rounded-xl text-xs font-medium"
-                style={{ background: "rgba(255,255,255,0.8)", border: "1px solid rgba(226,232,240,0.7)", color: page === totalPages ? "var(--col-dim)" : "var(--col-muted)", cursor: page === totalPages ? "not-allowed" : "pointer" }}>
+                style={{ background: "var(--glass-card-bg)", border: "1px solid var(--glass-inner-border)", color: page === totalPages ? "var(--col-dim)" : "var(--col-muted)", cursor: page === totalPages ? "not-allowed" : "pointer" }}>
                 Próxima →
               </button>
             </div>

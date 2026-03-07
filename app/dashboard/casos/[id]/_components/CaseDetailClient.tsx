@@ -108,7 +108,7 @@ export function CaseDetailClient({ id }: { id: string }) {
           <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: "rgba(254,226,226,0.8)" }}>
             <AlertTriangle className="h-6 w-6" style={{ color: "#DC2626" }} />
           </div>
-          <p className="text-sm font-semibold text-center" style={{ color: "#1E293B" }}>
+          <p className="text-sm font-semibold text-center" style={{ color: "var(--col-body)" }}>
             {error || "Caso de teste não encontrado."}
           </p>
         </GlassCard>

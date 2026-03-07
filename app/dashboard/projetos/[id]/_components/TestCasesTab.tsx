@@ -91,7 +91,7 @@ export function TestCasesTab({ projectId }: { projectId: string }) {
           <>
             {/* Cabeçalho da tabela */}
             <div className="grid px-5 py-3 text-xs font-bold uppercase tracking-wider"
-              style={{ gridTemplateColumns: GRID, color: "var(--col-dim)", borderBottom: "1px solid rgba(226,232,240,0.5)", background: "var(--glass-card-header)", borderRadius: "16px 16px 0 0" }}>
+              style={{ gridTemplateColumns: GRID, color: "var(--col-dim)", borderBottom: "1px solid var(--glass-inner-border)", background: "var(--glass-card-header)", borderRadius: "16px 16px 0 0" }}>
               <span>ID</span><span>Título</span><span>Status</span><span /><span />
             </div>
 
@@ -100,7 +100,7 @@ export function TestCasesTab({ projectId }: { projectId: string }) {
               return (
                 <div key={tc.id}
                   className="grid items-center px-5 py-3.5 hover:bg-blue-50/40 dark:hover:bg-blue-900/10 transition-colors"
-                  style={{ gridTemplateColumns: GRID, borderBottom: "1px solid rgba(226,232,240,0.3)" }}>
+                  style={{ gridTemplateColumns: GRID, borderBottom: "1px solid var(--glass-inner-border)" }}>
 
                   {/* ID */}
                   <span className="text-xs font-mono font-bold px-2 py-1 rounded-lg cursor-pointer"

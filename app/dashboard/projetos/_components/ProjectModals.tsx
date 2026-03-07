@@ -28,7 +28,7 @@ export function ArchiveModal({ project, onConfirm, onCancel }: ArchiveModalProps
         </p>
         <div className="flex gap-3 pt-2">
           <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors"
-            style={{ border: "1px solid rgba(226,232,240,0.7)", color: "var(--col-muted)", background: "transparent" }}>
+            style={{ border: "1px solid var(--glass-inner-border)", color: "var(--col-muted)", background: "transparent" }}>
             Cancelar
           </button>
           <button onClick={onConfirm} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-all"
@@ -69,7 +69,7 @@ export function DeleteModal({ project, onConfirm, onCancel }: DeleteModalProps) 
         </div>
         <div className="flex gap-3">
           <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors"
-            style={{ border: "1px solid rgba(226,232,240,0.7)", color: "var(--col-muted)", background: "transparent" }}>
+            style={{ border: "1px solid var(--glass-inner-border)", color: "var(--col-muted)", background: "transparent" }}>
             Cancelar
           </button>
           <button onClick={onConfirm} disabled={!canDelete}
@@ -114,7 +114,7 @@ export function SimpleDeleteModal({ title, description, onConfirm, onCancel }: S
         </p>
         <div className="flex gap-3 pt-1">
           <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-            style={{ border: "1px solid rgba(226,232,240,0.7)", color: "var(--col-muted)", background: "transparent" }}>
+            style={{ border: "1px solid var(--glass-inner-border)", color: "var(--col-muted)", background: "transparent" }}>
             Cancelar
           </button>
           <button onClick={onConfirm} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white"

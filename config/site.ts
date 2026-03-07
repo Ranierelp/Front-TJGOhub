@@ -7,6 +7,7 @@ export const siteConfig = {
   // navItems: links exibidos na navbar desktop
   navItems: [
     { label: "Dashboard",    href: "/dashboard" },
+    { label: "Projetos",     href: "/dashboard/projetos" },
     { label: "Execuções",    href: "/dashboard/execucoes" },
     { label: "Casos",        href: "/dashboard/casos" },
     { label: "Tags",         href: "/dashboard/tags" },
@@ -15,6 +16,7 @@ export const siteConfig = {
   // navMenuItems: itens do menu lateral mobile + dropdown do avatar
   navMenuItems: [
     { label: "Dashboard",    href: "/dashboard" },
+    { label: "Projetos",     href: "/dashboard/projetos" },
     { label: "Execuções",    href: "/dashboard/execucoes" },
     { label: "Casos",        href: "/dashboard/casos" },
     { label: "Tags",         href: "/dashboard/tags" },
