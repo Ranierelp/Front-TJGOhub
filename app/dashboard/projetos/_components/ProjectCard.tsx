@@ -7,7 +7,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, Server, TestTube, Play, ChevronRight } from "lucide-react";
+import { MoreHorizontal, Server, TestTube, ChevronRight } from "lucide-react";
 import type { ProjectList } from "@/lib/api/projects";
 import { GlassCard } from "./GlassBackground";
 
@@ -22,11 +22,11 @@ interface Props {
 function StatusBadge({ isActive }: { isActive: boolean }) {
   return (
     <span className="text-xs font-semibold px-2.5 py-1 rounded-lg" style={{
-      background: isActive ? "rgba(209,250,229,0.6)" : "rgba(241,245,249,0.6)",
-      color: isActive ? "#10B981" : "#64748B",
-      border: `1px solid ${isActive ? "rgba(167,243,208,0.5)" : "rgba(226,232,240,0.5)"}`,
+      background: isActive ? "rgba(209,250,229,0.6)" : "rgba(254,226,226,0.6)",
+      color: isActive ? "#10B981" : "#EF4444",
+      border: `1px solid ${isActive ? "rgba(167,243,208,0.5)" : "rgba(252,165,165,0.5)"}`,
     }}>
-      {isActive ? "⚡ Ativo" : "📦 Arquivado"}
+      {isActive ? "⚡ Ativo" : "🔴 Arquivado"}
     </span>
   );
 }
@@ -77,7 +77,7 @@ export function ProjectCard({ project, mode, onArchive, onDelete }: Props) {
     return (
       <div onClick={goto} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
         className="flex items-center gap-4 px-5 py-3.5 cursor-pointer transition-colors"
-        style={{ borderBottom: "1px solid rgba(226,232,240,0.3)", background: hovered ? "rgba(239,246,255,0.4)" : "transparent" }}>
+        style={{ borderBottom: "1px solid var(--glass-inner-border)", background: hovered ? "rgba(239,246,255,0.4)" : "transparent" }}>
         <span className="text-xl">{emoji}</span>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold truncate" style={{ color: "var(--col-heading)" }}>{project.name}</p>
@@ -118,7 +118,7 @@ export function ProjectCard({ project, mode, onArchive, onDelete }: Props) {
         <span className="flex items-center gap-1"><TestTube size={12} /> {project.test_cases_count} casos</span>
       </div>
 
-      <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid rgba(226,232,240,0.3)" }}>
+      <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid var(--glass-inner-border)" }}>
         <span className="text-xs" style={{ color: "var(--col-dim)" }}>
           {project.created_by_name ? `por ${project.created_by_name} • ` : ""}{date}
         </span>
