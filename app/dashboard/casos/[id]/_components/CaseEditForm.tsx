@@ -2,6 +2,8 @@
 
 import { useState, useRef } from "react";
 import { useForm }          from "react-hook-form";
+import Zoom                 from "react-medium-image-zoom";
+import "react-medium-image-zoom/dist/styles.css";
 import { zodResolver }      from "@hookform/resolvers/zod";
 import { z }                from "zod";
 import { ArrowLeft, Plus, Loader2, X, ImagePlus } from "lucide-react";
@@ -123,9 +125,11 @@ function ExistingStepCard({ attachment, index, onRemove, onChange, removing }: {
             {attachment.newPreview ? (
               // Nova imagem selecionada — mostra preview + botão para cancelar troca
               <>
-                <img src={attachment.newPreview} alt="Nova imagem"
-                  className="w-full max-h-52 object-contain rounded-xl"
-                  style={{ border: "1px solid rgba(147,197,253,0.5)", background: "var(--glass-field-bg)" }} />
+                <Zoom>
+                  <img src={attachment.newPreview} alt="Nova imagem"
+                    className="w-full max-h-52 object-contain rounded-xl cursor-zoom-in"
+                    style={{ border: "1px solid rgba(147,197,253,0.5)", background: "var(--glass-field-bg)" }} />
+                </Zoom>
                 <button type="button" onClick={clearNewImage}
                   className="absolute top-2 right-2 rounded-full p-1 transition-all"
                   style={{ background: "var(--glass-card-bg)", border: "1px solid var(--glass-inner-border)", color: "var(--col-dim)" }}
@@ -137,9 +141,11 @@ function ExistingStepCard({ attachment, index, onRemove, onChange, removing }: {
             ) : attachment.file ? (
               // Imagem atual do servidor — mostra com botão "Trocar"
               <div className="relative">
-                <img src={imgSrc} alt={attachment.title}
-                  className="w-full max-h-52 object-contain rounded-xl"
-                  style={{ border: "1px solid var(--glass-inner-border)", background: "var(--glass-field-bg)" }} />
+                <Zoom>
+                  <img src={imgSrc} alt={attachment.title}
+                    className="w-full max-h-52 object-contain rounded-xl cursor-zoom-in"
+                    style={{ border: "1px solid var(--glass-inner-border)", background: "var(--glass-field-bg)" }} />
+                </Zoom>
                 <button type="button" onClick={() => inputRef.current?.click()}
                   className="absolute bottom-2 right-2 flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-all"
                   style={{ background: "var(--glass-card-bg)", border: "1px solid var(--glass-inner-border)", color: "var(--col-muted)" }}
