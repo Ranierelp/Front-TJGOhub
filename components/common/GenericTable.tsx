@@ -479,7 +479,7 @@ export default function GenericTable({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
+                    className="h-8 border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950"
                     disabled={bulkActions.enable.isDisabled?.(getSelectedItemsArray())}
                     onClick={handleBulkEnable}
                   >
