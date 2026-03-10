@@ -44,7 +44,7 @@ export const ThemeSwitcher = () => {
         <Moon className="h-4 w-4 text-muted-foreground" />
         <Switch
           checked={isLightMode}
-          className="data-[state=checked]:bg-teal-600"
+          className="data-[state=checked]:bg-blue-600"
           onCheckedChange={() => setTheme(isLightMode ? "dark" : "light")}
         />
         <Sun className="h-4 w-4 text-muted-foreground" />
@@ -52,7 +52,7 @@ export const ThemeSwitcher = () => {
       <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
         {currentDate}
       </span>
-      <div className="flex items-center justify-center p-2 bg-teal-600 rounded-full">
+      <div className="flex items-center justify-center p-2 bg-blue-600 rounded-full">
         <Calendar className="w-5 h-5 text-white" />
       </div>
     </div>

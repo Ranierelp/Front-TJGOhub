@@ -114,10 +114,9 @@ export function ProjectDetailClient({ id }: { id: string }) {
           </GlassCard>
           <div className="w-full md:w-72 grid grid-cols-2 gap-3">
             {[
-              { emoji: "🧪", value: project.test_cases_count, label: "Casos" },
+              { emoji: "🧪", value: project.test_cases_count,    label: "Casos" },
               { emoji: "🖥️", value: project.environments_count, label: "Ambientes" },
-              { emoji: "▶️", value: project.test_runs_count,   label: "Execuções" },
-              { emoji: "✅", value: 0,                          label: "Aprovados" },
+              { emoji: "▶️", value: project.test_runs_count,    label: "Execuções" },
             ].map((s) => (
               <GlassCard key={s.label} className="p-3 text-center">
                 <p className="text-xl mb-1">{s.emoji}</p>

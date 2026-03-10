@@ -4,41 +4,41 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 213 33% 95%;
     --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
+    --card: 213 47% 99%;
     --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
+    --popover: 213 47% 99%;
     --popover-foreground: 222.2 84% 4.9%;
     --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96.1%;
+    --secondary: 213 40% 94%;
     --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
+    --muted: 213 40% 94%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
+    --accent: 213 40% 94%;
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    --border: 213 30% 87%;
+    --input: 213 30% 87%;
     --ring: 221 83% 53%;
     --radius: 0.5rem;
 
-    /* Glassmorphism + texto — componentes customizados */
-    --page-bg:           #F0F4FA;
-    --glass-card-bg:     rgba(255,255,255,0.72);
-    --glass-card-border: rgba(255,255,255,0.9);
-    --glass-shadow:      0 1px 4px rgba(0,0,0,0.03), 0 4px 16px rgba(0,0,0,0.02);
-    --glass-field-bg:    rgba(248,250,252,0.4);
-    --glass-inner-border:rgba(226,232,240,0.4);
+    /* Glassmorphism + texto — Azul Suave (institucional) */
+    --page-bg:           #eef2f7;
+    --glass-card-bg:     rgba(248,250,253,0.88);
+    --glass-card-border: rgba(186,210,235,0.7);
+    --glass-shadow:      0 1px 4px rgba(59,130,246,0.05), 0 4px 16px rgba(59,130,246,0.07);
+    --glass-field-bg:    rgba(238,242,247,0.6);
+    --glass-inner-border:rgba(186,210,235,0.5);
     --col-heading:       #0F172A;
     --col-body:          #1E293B;
     --col-label:         #6B7280;
     --col-muted:         #64748B;
     --col-dim:           #94A3B8;
-    --col-surface:       #F3F4F6;
-    --glass-card-header: linear-gradient(135deg,rgba(239,246,255,0.6),rgba(248,250,252,0.4));
+    --col-surface:       #eef2f7;
+    --glass-card-header: linear-gradient(135deg,rgba(219,234,254,0.7),rgba(238,242,247,0.5));
   }
 
   .dark {
@@ -144,13 +144,23 @@
     0%, 100% { transform: translate(0, 0) scale(1); }
     50%       { transform: translate(-20px, -15px) scale(1.03); }
   }
+
+  /* Animacao de expand dos ResultCards */
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-slide-in {
+    animation: fadeSlideIn 0.15s ease-out;
+  }
 }
 
 /* Inputs glassmorphism — usados na tela de criar/editar caso de teste */
 @layer components {
   .glass-input {
-    background: rgba(248, 250, 252, 0.8);
-    border: 1px solid rgba(226, 232, 240, 0.7);
+    background: rgba(238, 242, 247, 0.7);
+    border: 1px solid rgba(186, 210, 235, 0.6);
     color: var(--col-body);
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
@@ -161,7 +171,7 @@
   .glass-input:focus {
     border-color: rgba(59, 130, 246, 0.5);
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(248, 250, 253, 0.97);
   }
   .dark .glass-input {
     background: rgba(15, 23, 42, 0.6);
