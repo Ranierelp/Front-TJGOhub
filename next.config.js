@@ -154,6 +154,15 @@ const nextConfig = {
         source: '/api/:path*',
         destination: `${djangoApiUrl}/api/:path*/`,
       },
+      // Proxy de media files: elimina problema cross-origin.
+      // Sem isso: <img src="http://localhost:8000/media/..."> falha porque
+      // o browser trata porta 3000 e porta 8000 como origens diferentes.
+      // Com isso: <img src="/media/..."> vai para localhost:3000/media/...
+      // que o Next.js redireciona para localhost:8000/media/... — mesmo origin.
+      {
+        source: '/media/:path*',
+        destination: `${djangoApiUrl}/media/:path*`,
+      },
     ];
   },
   // Configurações de imagem otimizada

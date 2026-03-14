@@ -3,18 +3,18 @@
  * Compatibilidade com código legado
  */
 
-import { useAuth as useAuthState, useAuthActions } from "@/stores/authStore";
+import { useAuth as useAuthState, useAuthActions, type User, type LoginCredentials, type RegisterData } from "@/stores/authStore";
 
 export interface UseAuthReturn {
   // Estado da autenticação
-  user: any;
+  user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
 
   // Ações
-  login: (credentials: any) => Promise<{ success: boolean; message: string }>;
-  register: (data: any) => Promise<{ success: boolean; message: string }>;
+  login: (credentials: LoginCredentials) => Promise<{ success: boolean; message: string }>;
+  register: (data: RegisterData) => Promise<{ success: boolean; message: string }>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   clearError: () => void;

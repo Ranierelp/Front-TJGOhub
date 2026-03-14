@@ -10,6 +10,7 @@ interface ResultsListProps {
   isLoading: boolean;
   pagination: { page: number; totalPages: number; total: number };
   onPageChange: (page: number) => void;
+  onMarkedFlaky?: () => void;
 }
 
 export function ResultsList({
@@ -17,6 +18,7 @@ export function ResultsList({
   isLoading,
   pagination,
   onPageChange,
+  onMarkedFlaky,
 }: ResultsListProps) {
   if (isLoading) {
     return (
@@ -40,7 +42,7 @@ export function ResultsList({
   return (
     <div className="flex flex-col gap-2">
       {results.map((r) => (
-        <ResultCard key={r.id} result={r} />
+        <ResultCard key={r.id} result={r} onMarkedFlaky={onMarkedFlaky} />
       ))}
 
       {/* Paginacao — so aparece quando ha mais de uma pagina */}

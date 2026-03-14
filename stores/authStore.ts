@@ -19,7 +19,7 @@
 
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import { post, get as apiGet } from "@/lib/api";
+import { post, get as apiGet, api } from "@/lib/api";
 
 // =============================================================================
 // CONCEITO 2: Interfaces TypeScript
@@ -39,7 +39,7 @@ import { post, get as apiGet } from "@/lib/api";
 // =============================================================================
 
 export interface LoginCredentials {
-  username: string;
+  email: string;
   password: string;
 }
 
@@ -246,8 +246,8 @@ export const useAuthStore = create<AuthState>()(
             // post<TokenResponse> → o <T> é um generic do TypeScript:
             // diz ao compilador que a resposta terá o formato de TokenResponse.
             // É como Type Hints do Python: post[TokenResponse]("/endpoint")
-            const response = await post<TokenResponse>("/api/v1/user/token/", {
-              email: credentials.username, // a API Django usa "email" como campo de login
+            const response = await post<TokenResponse>(api.endpoints.token, {
+              email: credentials.email,
               password: credentials.password,
             });
 
@@ -275,7 +275,7 @@ export const useAuthStore = create<AuthState>()(
             }
 
             // Busca os dados completos do usuário autenticado
-            const userResponse = await apiGet<ApiUserResponse>("/api/v1/user/user/me/");
+            const userResponse = await apiGet<ApiUserResponse>(api.endpoints.me);
 
             let user: User;
             if (userResponse.success && userResponse.data) {
@@ -284,8 +284,8 @@ export const useAuthStore = create<AuthState>()(
               // Fallback: usa o mínimo que veio junto com o token
               user = {
                 id: String(response.data.user?.id || "unknown"),
-                username: credentials.username,
-                email: response.data.user?.email || credentials.username,
+                username: credentials.email,
+                email: response.data.user?.email || credentials.email,
                 firstName: response.data.user?.name?.split(" ")[0] || "",
                 lastName: response.data.user?.name?.split(" ").slice(1).join(" ") || "",
                 roles: ["USER"],
@@ -345,7 +345,7 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: true, error: null });
 
           try {
-            const response = await post("/api/v1/user/register/", {
+            const response = await post(api.endpoints.register, {
               // Converte camelCase → snake_case para o Django
               first_name: data.firstName,
               last_name: data.lastName,
@@ -387,7 +387,7 @@ export const useAuthStore = create<AuthState>()(
           if (refreshToken) {
             try {
               // Blacklist no servidor — se falhar, ignora
-              await post("/api/v1/user/logout/", { refresh: refreshToken });
+              await post(api.endpoints.logout, { refresh: refreshToken });
             } catch {
               // Logout local já é suficiente
             }
@@ -448,7 +448,7 @@ export const useAuthStore = create<AuthState>()(
               if (refreshToken) {
                 try {
                   // Tenta renovar via POST /api/v1/user/token/refresh/
-                  const refreshResponse = await post<{ access: string }>("/api/v1/user/token/refresh/", {
+                  const refreshResponse = await post<{ access: string }>(api.endpoints.tokenRefresh, {
                     refresh: refreshToken,
                   });
 
@@ -456,7 +456,7 @@ export const useAuthStore = create<AuthState>()(
                     const newAccessToken = refreshResponse.data.access;
                     localStorage.setItem("access_token", newAccessToken);
 
-                    const userResponse = await apiGet<ApiUserResponse>("/api/v1/user/user/me/");
+                    const userResponse = await apiGet<ApiUserResponse>(api.endpoints.me);
                     if (userResponse.success && userResponse.data) {
                       const user = mapApiUserToUser(userResponse.data);
                       const newPayload = JSON.parse(atob(newAccessToken.split(".")[1]));
@@ -497,7 +497,7 @@ export const useAuthStore = create<AuthState>()(
             if (!user) {
               // Usuário não estava em cache — busca da API
               try {
-                const userResponse = await apiGet<ApiUserResponse>("/api/v1/user/user/me/");
+                const userResponse = await apiGet<ApiUserResponse>(api.endpoints.me);
                 if (userResponse.success && userResponse.data) {
                   user = mapApiUserToUser(userResponse.data);
                 }

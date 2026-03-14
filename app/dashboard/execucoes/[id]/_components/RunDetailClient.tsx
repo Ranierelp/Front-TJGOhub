@@ -30,6 +30,7 @@ export function RunDetailClient({ runId }: RunDetailClientProps) {
     setStatusFilter,
     resultsPagination,
     setResultsPage,
+    refetch,
   } = useRunDetail(runId);
 
   // Estado 1: carregando cabecalho da run
@@ -78,6 +79,7 @@ export function RunDetailClient({ runId }: RunDetailClientProps) {
           isLoading={isLoadingResults}
           pagination={resultsPagination}
           onPageChange={setResultsPage}
+          onMarkedFlaky={refetch}
         />
       </div>
     </div>
