@@ -128,3 +128,18 @@ export function markResultAsFlaky(id: string) {
     `${api.endpoints.results}${id}/mark-as-flaky/`,
   );
 }
+
+// Resposta do POST /api/v1/runs/upload-report/
+// O backend retorna 202 Accepted — o parse roda em background via Celery.
+// Por isso status é sempre "PENDING" imediatamente após o upload.
+export interface UploadReportResponse {
+  run_id: string;   // ex: "run-20260313-001" — ID legível humano
+  id:     string;   // UUID do TestRun no banco
+  status: "PENDING";
+  detail: string;   // mensagem informativa
+}
+
+/** Envia o JSON do relatório Playwright para processamento em background */
+export function uploadReport(data: unknown) {
+  return post<UploadReportResponse>(api.endpoints.uploadReport, data);
+}
