@@ -46,6 +46,7 @@ export const api = {
     environments: "/api/v1/environments/",
     testCases: "/api/v1/test-cases/",
     runs: "/api/v1/runs/",
+    uploadReport: "/api/v1/runs/upload-report/",
     results: "/api/v1/results/",
     tags: "/api/v1/tags/",
   },
