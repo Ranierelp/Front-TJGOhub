@@ -1,68 +1,31 @@
 // =============================================================================
-// PipelineRunning — execução simulada com etapas + resultados ao vivo
+// PipelineRunning — dispara pipeline GitLab CI e aguarda o resultado no Hub
 //
-// CONCEITO: useEffect com cleanup
-//   setInterval cria um timer que executa a cada N milissegundos para sempre.
-//   Se o componente for desmontado (usuário navegar para outra página), o timer
-//   continua rodando — isso é um "memory leak" (vazamento de memória).
+// Fluxo real:
+//   1. Na montagem: POST /api/v1/runs/trigger-pipeline/ → recebe web_url do GitLab
+//   2. Polling: GET /api/v1/runs/?project=...&ordering=-started_at a cada 5s
+//   3. Quando encontra run com status COMPLETED e started_at > triggeredAt → concluído
+//   4. Botão navega para /dashboard/execucoes/{run.id}
 //
-//   Solução: retornar uma função de cleanup no useEffect.
-//   O React chama essa função automaticamente:
-//     - Quando o componente é desmontado
-//     - Antes de re-executar o efeito (se as deps mudaram)
-//
-//   useEffect(() => {
-//     const timer = setInterval(() => { ... }, 1000);
-//     return () => clearInterval(timer); // ← cleanup
-//   }, []);
-//
-//   Paralelo Django: é como context managers (with) — o cleanup é o __exit__.
-//
-// CONCEITO: setTimeout com índice simulado
-//   Para simular resultados aparecendo em tempo real, usamos setTimeout
-//   com delay crescente: resultado 1 aparece em 4s, resultado 2 em 8s, etc.
-//   Os timeouts são armazenados em um array e todos cancelados no cleanup.
-//
-// TODO: Substituir toda a simulação por:
-//   1. POST /api/v1/runs/trigger-pipeline/ → recebe run_id
-//   2. Polling: GET /api/v1/runs/{run_id}/ a cada 3s até COMPLETED
-//   3. Resultados: GET /api/v1/runs/{run_id}/results/ com paginação
+// A animação das etapas é cosmética (timer-based) — reflete as etapas reais
+// do .gitlab-ci.yml mas sem sincronização com o GitLab API.
 // =============================================================================
 
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getStatusStyle } from "@/lib/statusConfig";
-
-// TODO: substituir por dados reais quando backend tiver trigger-pipeline
-const MOCK_RESULTS = [
-  { title: "Login com credenciais válidas",  status: "PASSED", duration: "1.2s", module: "auth",       delay: 4000  },
-  { title: "Emitir Guia de Agravo",          status: "PASSED", duration: "3.1s", module: "guias",      delay: 8000  },
-  { title: "Depositar valor no processo",    status: "FAILED", duration: "4.8s", module: "financeiro", delay: 14000 },
-  { title: "Validar campo Observação",       status: "PASSED", duration: "2.3s", module: "processos",  delay: 18000 },
-  { title: "Parcelamento da Guia",           status: "FLAKY",  duration: "2.9s", module: "guias",      delay: 22000 },
-  { title: "Buscar múltiplas guias",         status: "PASSED", duration: "1.5s", module: "guias",      delay: 25000 },
-  { title: "Cadastrar Tipo de Guia",         status: "PASSED", duration: "0.9s", module: "guias",      delay: 28000 },
-  { title: "Consulta de tipo de guia",       status: "FAILED", duration: "7.9s", module: "guias",      delay: 37000 },
-] as const;
+import { triggerPipeline, listRuns, TestRun } from "@/lib/api/runs";
 
 const PIPELINE_STAGES = [
-  { id: "setup",   name: "Setup ambiente",              icon: "⚙",  duration: "~5s",   delay: 0 },
-  { id: "install", name: "Instalar dependências",       icon: "📦", duration: "~15s",  delay: 2000 },
-  { id: "tests",   name: "Executar testes Playwright",  icon: "🧪", duration: "~2min", delay: 6000 },
-  { id: "report",  name: "Gerar relatório",             icon: "📊", duration: "~3s",   delay: 42000 },
-  { id: "upload",  name: "Enviar resultados ao Hub",    icon: "☁",  duration: "~2s",   delay: 45000 },
+  { id: "setup",   name: "Setup ambiente",             icon: "⚙",  duration: "~5s",   delay: 0     },
+  { id: "install", name: "Instalar dependências",      icon: "📦", duration: "~15s",  delay: 3000  },
+  { id: "tests",   name: "Executar testes Playwright", icon: "🧪", duration: "~2min", delay: 8000  },
+  { id: "report",  name: "Gerar relatório",            icon: "📊", duration: "~3s",   delay: 130000 },
+  { id: "upload",  name: "Enviar resultados ao Hub",   icon: "☁",  duration: "~2s",   delay: 133000 },
 ];
 
 type StageStatus = "pending" | "running" | "done";
-
-interface MockResult {
-  title:    string;
-  status:   string;
-  duration: string;
-  module:   string;
-}
 
 interface PipelineRunningProps {
   projectId:     string;
@@ -73,72 +36,97 @@ interface PipelineRunningProps {
 
 export function PipelineRunning({ projectId, environmentId, branch, onBack }: PipelineRunningProps) {
   const router = useRouter();
+
   const [stageStatuses, setStageStatuses] = useState<StageStatus[]>(
     Array(PIPELINE_STAGES.length).fill("pending"),
   );
-  const [visibleResults, setVisibleResults] = useState<MockResult[]>([]);
-  const [elapsed, setElapsed]   = useState(0);
-  const [isDone, setIsDone]     = useState(false);
+  const [elapsed, setElapsed]     = useState(0);
+  const [webUrl, setWebUrl]       = useState<string | null>(null);
+  const [completedRun, setCompletedRun] = useState<TestRun | null>(null);
+  const [error, setError]         = useState<string | null>(null);
 
-  // useRef para guardar IDs dos timers sem causar re-render
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  // Momento em que o trigger foi feito — usado para filtrar runs anteriores
+  const triggeredAt = useRef<string>(new Date().toISOString());
+  const timers      = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const pollRef     = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // ── Efeito principal: dispara pipeline + inicia animação + polling ──────────
   useEffect(() => {
-    // Timer do relógio (incrementa a cada segundo)
+    // Relógio
     const clockTimer = setInterval(() => setElapsed((s) => s + 1), 1000);
-    timers.current.push(clockTimer as unknown as ReturnType<typeof setTimeout>);
 
-    // Simula progressão das etapas com setTimeout
+    // Animação cosmética das etapas
     PIPELINE_STAGES.forEach((stage, i) => {
-      const startTimer = setTimeout(() => {
+      const startT = setTimeout(() => {
         setStageStatuses((prev) => {
-          const next = [...prev];
-          next[i] = "running";
-          return next;
+          const next = [...prev]; next[i] = "running"; return next;
         });
       }, stage.delay);
 
       const doneDelay = i < PIPELINE_STAGES.length - 1
         ? PIPELINE_STAGES[i + 1].delay
-        : stage.delay + 3000;
+        : stage.delay + 4000;
 
-      const doneTimer = setTimeout(() => {
+      const doneT = setTimeout(() => {
         setStageStatuses((prev) => {
-          const next = [...prev];
-          next[i] = "done";
-          return next;
+          const next = [...prev]; next[i] = "done"; return next;
         });
       }, doneDelay);
 
-      timers.current.push(startTimer, doneTimer);
+      timers.current.push(startT, doneT);
     });
 
-    // Simula resultados aparecendo um a um
-    MOCK_RESULTS.forEach((r) => {
-      const t = setTimeout(() => {
-        setVisibleResults((prev) => [...prev, r]);
-      }, r.delay);
-      timers.current.push(t);
-    });
+    // 1. Dispara a pipeline no GitLab
+    triggerPipeline({ project_id: projectId, environment_id: environmentId, branch })
+      .then((res) => {
+        setWebUrl(res.data.web_url);
 
-    // Marca como concluído após todas as etapas
-    const doneTimer = setTimeout(() => {
-      setIsDone(true);
-      clearInterval(clockTimer);
-    }, 48000);
-    timers.current.push(doneTimer);
+        // 2. Inicia polling a cada 5s
+        pollRef.current = setInterval(async () => {
+          try {
+            // Filtra diretamente no servidor: somente runs COMPLETED iniciados
+            // após o momento em que o trigger foi feito. Evita comparação de
+            // strings ISO com formatos diferentes (Z vs +00:00) e garante que
+            // runs de pipelines anteriores não sejam confundidos com o atual.
+            const page = await listRuns({
+              project: projectId,
+              ordering: "-started_at",
+              status: "COMPLETED",
+              started_at_after: triggeredAt.current,
+            });
+            const found = page.data.results[0] ?? null;
+            if (found) {
+              setCompletedRun(found);
+              clearInterval(pollRef.current!);
+              clearInterval(clockTimer);
+            }
+          } catch (err: unknown) {
+            // Para erros 4xx (ex: 400 filtro inválido) o polling não vai se
+            // recuperar sozinho — interrompe para evitar spam de requisições
+            const status = (err as { status?: number })?.status;
+            if (status && status >= 400 && status < 500) {
+              setError(`Erro ao consultar execuções (${status}). Verifique os parâmetros.`);
+              clearInterval(pollRef.current!);
+              clearInterval(clockTimer);
+            }
+            // Erros 5xx ou de rede são transitórios — deixa o polling continuar
+          }
+        }, 5000);
+      })
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(msg);
+        clearInterval(clockTimer);
+      });
 
-    // CLEANUP: cancela todos os timers ao desmontar o componente
-    // Sem isso, os timers continuariam rodando após sair da página
     return () => {
       timers.current.forEach(clearTimeout);
       clearInterval(clockTimer);
+      if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, []); // deps=[]: roda só uma vez quando o componente monta
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const passed = visibleResults.filter((r) => r.status === "PASSED").length;
-  const failed = visibleResults.filter((r) => r.status === "FAILED").length;
-  const flaky  = visibleResults.filter((r) => r.status === "FLAKY").length;
+  const isDone = completedRun !== null;
 
   const cardStyle: React.CSSProperties = {
     background: "var(--glass-card-bg)",
@@ -148,6 +136,29 @@ export function PipelineRunning({ projectId, environmentId, branch, onBack }: Pi
     border: "1px solid var(--glass-card-border)",
     boxShadow: "var(--glass-shadow)",
   };
+
+  // ── Tela de erro ───────────────────────────────────────────────────────────
+  if (error) {
+    return (
+      <div style={{ ...cardStyle, padding: 32, textAlign: "center" }}>
+        <div style={{ fontSize: 32, marginBottom: 12 }}>⚠</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "#dc2626", marginBottom: 8 }}>
+          Erro ao disparar a pipeline
+        </div>
+        <div style={{ fontSize: 13, color: "var(--col-muted)", marginBottom: 24 }}>{error}</div>
+        <button
+          onClick={onBack}
+          style={{
+            padding: "10px 24px", borderRadius: 8, border: "1.5px solid var(--glass-card-border)",
+            background: "var(--glass-field-bg)", color: "var(--col-muted)",
+            fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+          }}
+        >
+          ← Voltar
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ animation: "fadeUp 0.3s ease" }}>
@@ -176,8 +187,14 @@ export function PipelineRunning({ projectId, environmentId, branch, onBack }: Pi
             <div style={{ fontSize: 15, fontWeight: 700, color: isDone ? "#16a34a" : "#7c3aed", fontFamily: "inherit" }}>
               {isDone ? "Pipeline concluída!" : "Pipeline em execução..."}
             </div>
-            <div style={{ fontSize: 12, color: "var(--col-muted)" }}>
+            <div style={{ fontSize: 12, color: "var(--col-muted)", display: "flex", alignItems: "center", gap: 8 }}>
               {branch}
+              {webUrl && (
+                <a href={webUrl} target="_blank" rel="noreferrer"
+                  style={{ color: "#2563eb", fontSize: 11, textDecoration: "none" }}>
+                  Ver no GitLab ↗
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -205,7 +222,7 @@ export function PipelineRunning({ projectId, environmentId, branch, onBack }: Pi
         </div>
       </div>
 
-      {/* Conteúdo: sidebar de etapas + resultados ao vivo */}
+      {/* Conteúdo: sidebar de etapas + área principal */}
       <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 16 }}>
         {/* Sidebar de etapas */}
         <div style={{ ...cardStyle, padding: 16, height: "fit-content", position: "sticky", top: 80 }}>
@@ -244,87 +261,64 @@ export function PipelineRunning({ projectId, environmentId, branch, onBack }: Pi
           })}
         </div>
 
-        {/* Área de resultados ao vivo */}
+        {/* Área principal */}
         <div>
-          {/* Métricas ao vivo */}
-          {visibleResults.length > 0 && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 12 }}>
-              {[
-                { label: "Total",  value: visibleResults.length, color: "#2563eb" },
-                { label: "Passou", value: passed,                color: "#16a34a" },
-                { label: "Falhou", value: failed,                color: "#dc2626" },
-                { label: "Flaky",  value: flaky,                 color: "#ca8a04" },
-              ].map((m) => (
-                <div key={m.label} style={{ ...cardStyle, padding: "10px 14px", borderTop: `3px solid ${m.color}` }}>
-                  <span style={{ fontSize: 20, fontWeight: 800, color: m.color }}>{m.value}</span>
-                  <span style={{ fontSize: 11, color: "var(--col-dim)", marginLeft: 6 }}>{m.label}</span>
+          {/* Métricas do run concluído */}
+          {completedRun && (
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 12 }}>
+                {[
+                  { label: "Total",  value: completedRun.total_tests,   color: "#2563eb" },
+                  { label: "Passou", value: completedRun.passed_tests,  color: "#16a34a" },
+                  { label: "Falhou", value: completedRun.failed_tests,  color: "#dc2626" },
+                  { label: "Flaky",  value: completedRun.flaky_tests,   color: "#ca8a04" },
+                ].map((m) => (
+                  <div key={m.label} style={{ ...cardStyle, padding: "10px 14px", borderTop: `3px solid ${m.color}` }}>
+                    <span style={{ fontSize: 20, fontWeight: 800, color: m.color }}>{m.value}</span>
+                    <span style={{ fontSize: 11, color: "var(--col-dim)", marginLeft: 6 }}>{m.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {completedRun.total_tests > 0 && (
+                <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden", marginBottom: 16, background: "var(--glass-field-bg)" }}>
+                  {completedRun.passed_tests > 0 && <div style={{ width: `${(completedRun.passed_tests / completedRun.total_tests) * 100}%`, background: "#16a34a" }} />}
+                  {completedRun.flaky_tests  > 0 && <div style={{ width: `${(completedRun.flaky_tests  / completedRun.total_tests) * 100}%`, background: "#ca8a04" }} />}
+                  {completedRun.failed_tests > 0 && <div style={{ width: `${(completedRun.failed_tests / completedRun.total_tests) * 100}%`, background: "#dc2626" }} />}
                 </div>
-              ))}
-            </div>
-          )}
+              )}
 
-          {/* Barra de progresso */}
-          {visibleResults.length > 0 && (
-            <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden", marginBottom: 12, background: "var(--glass-field-bg)" }}>
-              {passed > 0 && <div style={{ width: `${(passed / visibleResults.length) * 100}%`, background: "#16a34a", transition: "width 0.5s" }} />}
-              {flaky  > 0 && <div style={{ width: `${(flaky  / visibleResults.length) * 100}%`, background: "#ca8a04", transition: "width 0.5s" }} />}
-              {failed > 0 && <div style={{ width: `${(failed / visibleResults.length) * 100}%`, background: "#dc2626", transition: "width 0.5s" }} />}
-            </div>
+              <div style={{ ...cardStyle, padding: "16px 20px", marginBottom: 16 }}>
+                <div style={{ display: "flex", gap: 24, flexWrap: "wrap" as const }}>
+                  {[
+                    { label: "Run ID",    value: completedRun.run_id },
+                    { label: "Branch",    value: completedRun.branch || "—" },
+                    { label: "Duração",   value: completedRun.duration_formatted || "—" },
+                    { label: "Taxa de êxito", value: `${completedRun.success_rate}%` },
+                  ].map((item) => (
+                    <div key={item.label}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: "var(--col-label)", textTransform: "uppercase" as const, letterSpacing: "0.5px" }}>{item.label}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--col-heading)", fontFamily: "monospace" }}>{item.value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
           )}
-
-          {/* Label "Resultados ao vivo" */}
-          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--col-label)", marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
-            Resultados ao vivo
-            {!isDone && (
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#dc2626", display: "inline-block", animation: "pulse 1s infinite" }} />
-            )}
-          </div>
 
           {/* Placeholder enquanto aguarda */}
-          {visibleResults.length === 0 && !isDone && (
+          {!completedRun && (
             <div style={{ ...cardStyle, padding: "40px 20px", textAlign: "center", color: "var(--col-dim)", fontSize: 13 }}>
               <div style={{ animation: "pulse 1.5s infinite", fontSize: 26, marginBottom: 10 }}>🧪</div>
-              Aguardando os testes iniciarem...
+              {webUrl
+                ? "Aguardando o término da pipeline e o envio do relatório..."
+                : "Conectando ao GitLab..."}
             </div>
           )}
-
-          {/* Lista de resultados */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {visibleResults.map((r, i) => {
-              const s = getStatusStyle(r.status);
-              return (
-                <div
-                  key={i}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 12,
-                    padding: "10px 14px", background: "var(--glass-card-bg)",
-                    borderRadius: 8, border: "1px solid var(--glass-card-border)",
-                    borderLeft: `4px solid ${s.color}`,
-                    animation: "fadeUp 0.25s ease",
-                  }}
-                >
-                  <span style={{
-                    width: 24, height: 24, borderRadius: 6, flexShrink: 0,
-                    background: s.bg, color: s.color,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 11, fontWeight: 700,
-                  }}>
-                    {s.icon}
-                  </span>
-                  <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: "var(--col-heading)" }}>{r.title}</span>
-                  <span style={{ fontSize: 11, color: "var(--col-dim)", fontFamily: "monospace" }}>{r.module}</span>
-                  <span style={{ fontSize: 11, color: "var(--col-muted)", fontFamily: "monospace" }}>{r.duration}</span>
-                  <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: s.bg, color: s.color, textTransform: "uppercase" as const }}>
-                    {s.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
 
           {/* Botões pós-conclusão */}
           {isDone && (
-            <div style={{ display: "flex", gap: 12, marginTop: 24, justifyContent: "center" }}>
+            <div style={{ display: "flex", gap: 12, marginTop: 8, justifyContent: "center" }}>
               <button
                 onClick={onBack}
                 style={{
@@ -335,18 +329,17 @@ export function PipelineRunning({ projectId, environmentId, branch, onBack }: Pi
                   cursor: "pointer", fontFamily: "inherit",
                 }}
               >
-                ← Voltar às Execuções
+                ← Nova Pipeline
               </button>
-              {/* TODO: navegar para /execucoes/{id} real quando backend tiver trigger-pipeline */}
               <button
-                onClick={() => router.push("/dashboard/execucoes")}
+                onClick={() => router.push(`/dashboard/execucoes/${completedRun!.id}`)}
                 style={{
                   padding: "10px 24px", borderRadius: 8, border: "none",
                   background: "#2563eb", color: "white",
                   fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
                 }}
               >
-                Ver Execuções →
+                Ver Detalhes da Execução →
               </button>
             </div>
           )}
