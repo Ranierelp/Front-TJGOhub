@@ -1,10 +1,5 @@
 // =============================================================================
 // PipelineConfig — configuração inicial para disparar pipeline GitLab CI
-//
-// TODO: Quando o backend tiver o endpoint POST /api/v1/runs/trigger-pipeline/,
-//       substituir os mocks por chamadas reais:
-//       - MOCK_PROJECTS → GET /api/v1/projects/  (já existe: useProjects())
-//       - MOCK_BRANCHES → GET /api/v1/gitlab/projects/{id}/branches/  (a criar)
 // =============================================================================
 
 "use client";
@@ -12,11 +7,6 @@
 import { useState, useCallback } from "react";
 import { useProjects } from "@/hooks/useProjects";
 import { useEnvironments } from "../../hooks/useEnvironments";
-
-// TODO: buscar branches reais da API do GitLab quando disponível
-const MOCK_BRANCHES: Record<string, string[]> = {
-  default: ["main", "develop", "release/1.0", "hotfix/login"],
-};
 
 const PIPELINE_STAGES = [
   { icon: "⚙",  name: "Setup ambiente",              duration: "~5s" },
@@ -37,8 +27,6 @@ export function PipelineConfig({ onStart }: PipelineConfigProps) {
 
   const { projects, loading: loadingProjects }       = useProjects();
   const { environments, loading: loadingEnvironments } = useEnvironments(projectId || null);
-
-  const branches = MOCK_BRANCHES[projectId] ?? MOCK_BRANCHES.default;
 
   const handleProjectChange = useCallback((id: string) => {
     setProjectId(id);
@@ -125,14 +113,15 @@ export function PipelineConfig({ onStart }: PipelineConfigProps) {
         </div>
 
         <div style={{ ...cardStyle, opacity: projectId ? 1 : 0.45, transition: "opacity 0.2s" }}>
-          <label style={labelStyle}>
-            Branch <span style={{ color: "#dc2626" }}>*</span>
-            {/* TODO: buscar branches reais da API do GitLab */}
-          </label>
-          <select value={branch} onChange={(e) => setBranch(e.target.value)} disabled={!projectId} style={selectStyle}>
-            <option value="">Selecione...</option>
-            {branches.map((b) => <option key={b} value={b}>{b}</option>)}
-          </select>
+          <label style={labelStyle}>Branch <span style={{ color: "#dc2626" }}>*</span></label>
+          <input
+            type="text"
+            value={branch}
+            onChange={(e) => setBranch(e.target.value)}
+            disabled={!projectId}
+            placeholder="ex: main"
+            style={{ ...selectStyle, backgroundImage: "none", paddingRight: 14 }}
+          />
         </div>
       </div>
 
