@@ -183,7 +183,7 @@ export function CreateCaseClient() {
                           color: "#1D4ED8", border: "1px solid rgba(147,197,253,0.5)",
                         } : {
                           border: "1.5px dashed rgba(203,213,225,0.8)",
-                          color: "#94A3B8", background: "transparent",
+                          color: "var(--col-dim)", background: "transparent",
                         }}>
                         {tag.name}
                         {sel && <span style={{ fontSize: 9, color: "#60A5FA" }}>✕</span>}
