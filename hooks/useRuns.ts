@@ -19,7 +19,7 @@ export type RunStatusFilter =
   | "FAILED"
   | "CANCELLED";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 export function useRuns(projectId?: string) {
   const [runs, setRuns]             = useState<TestRun[]>([]);
