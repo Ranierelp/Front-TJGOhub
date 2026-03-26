@@ -54,7 +54,7 @@ export function RunsClient() {
         )}
 
         {/* Paginacao — aparece so quando ha mais de uma pagina */}
-        {!isLoading && !error && pagination.total > 20 && (
+        {!isLoading && !error && pagination.totalPages > 1 && (
           <div className="flex items-center justify-between px-1">
             <span className="text-xs" style={{ color: "var(--col-dim)" }}>
               Pagina {pagination.page} de {pagination.totalPages} · {pagination.total} execucoes
