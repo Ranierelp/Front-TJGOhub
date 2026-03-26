@@ -46,7 +46,7 @@ export default function MudarSenhaPage() {
   const onSubmit = async (_data: PasswordFormData) => {
     setMessage("");
     try {
-      // TODO: chamar endpoint de mudanÃ§a de senha do backend
+      // TODO: chamar endpoint de mudança de senha do backend
       setMessage("Senha alterada com sucesso!");
       setIsSuccess(true);
       reset();
@@ -67,7 +67,7 @@ export default function MudarSenhaPage() {
           <Logo size={80} />
           <h1 className="text-2xl font-bold mt-4">Alterar Senha</h1>
           <p className="text-sm text-muted-foreground">
-            Para sua seguranÃ§a, informe sua senha atual antes de definir uma
+            Para sua segurança, informe sua senha atual antes de definir uma
             nova.
           </p>
         </CardHeader>
@@ -162,7 +162,7 @@ export default function MudarSenhaPage() {
               className="font-semibold text-primary hover:underline text-sm"
               href="/sistema"
             >
-              Voltar a pÃ¡gina principal
+              Voltar à página principal
             </Link>
           </CardFooter>
         </form>
