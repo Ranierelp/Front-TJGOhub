@@ -46,14 +46,37 @@ export function PipelineRunning({ projectId, environmentId, branch, onBack }: Pi
   const [error, setError]         = useState<string | null>(null);
 
   // Momento em que o trigger foi feito — usado para filtrar runs anteriores
-  const triggeredAt = useRef<string>(new Date().toISOString());
-  const timers      = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const pollRef     = useRef<ReturnType<typeof setInterval> | null>(null);
+  const triggeredAt  = useRef<string>(new Date().toISOString());
+  const timers       = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const pollRef      = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Guard contra double-fire do React StrictMode (Next.js 15 ativa strict por padrão)
+  const hasFiredRef  = useRef(false);
+  // Ref do relógio — permite pará-lo de fora do closure do efeito principal
+  const clockTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ── Quando a pipeline conclui: para cronômetro + força todas as etapas "done" ──
+  // Necessário porque a animação das etapas é baseada em timers fixos; se a pipeline
+  // terminar antes dos 130s da etapa "tests", as etapas ficariam presas no meio.
+  useEffect(() => {
+    if (!completedRun) return;
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+    setStageStatuses(Array(PIPELINE_STAGES.length).fill("done"));
+    if (clockTimerRef.current) {
+      clearInterval(clockTimerRef.current);
+      clockTimerRef.current = null;
+    }
+  }, [completedRun]);
 
   // ── Efeito principal: dispara pipeline + inicia animação + polling ──────────
   useEffect(() => {
-    // Relógio
-    const clockTimer = setInterval(() => setElapsed((s) => s + 1), 1000);
+    // Limpa timers residuais antes de (re)iniciar — seguro para o double-mount do StrictMode
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+
+    // Relógio armazenado em ref para poder ser parado de qualquer lugar
+    if (clockTimerRef.current) clearInterval(clockTimerRef.current);
+    clockTimerRef.current = setInterval(() => setElapsed((s) => s + 1), 1000);
 
     // Animação cosmética das etapas
     PIPELINE_STAGES.forEach((stage, i) => {
@@ -76,53 +99,72 @@ export function PipelineRunning({ projectId, environmentId, branch, onBack }: Pi
       timers.current.push(startT, doneT);
     });
 
-    // 1. Dispara a pipeline no GitLab
-    triggerPipeline({ project_id: projectId, environment_id: environmentId, branch })
-      .then((res) => {
-        setWebUrl(res.data.web_url);
+    // 1. Dispara a pipeline no GitLab — guard evita double-fire do React StrictMode
+    if (!hasFiredRef.current) {
+      hasFiredRef.current = true;
 
-        // 2. Inicia polling a cada 5s
-        pollRef.current = setInterval(async () => {
-          try {
-            // Filtra diretamente no servidor: somente runs COMPLETED iniciados
-            // após o momento em que o trigger foi feito. Evita comparação de
-            // strings ISO com formatos diferentes (Z vs +00:00) e garante que
-            // runs de pipelines anteriores não sejam confundidos com o atual.
-            const page = await listRuns({
-              project: projectId,
-              ordering: "-started_at",
-              status: "COMPLETED",
-              started_at_after: triggeredAt.current,
-            });
-            const found = page.data.results[0] ?? null;
-            if (found) {
-              setCompletedRun(found);
-              clearInterval(pollRef.current!);
-              clearInterval(clockTimer);
+      triggerPipeline({ project_id: projectId, environment_id: environmentId, branch })
+        .then((res) => {
+          setWebUrl(res.data.web_url);
+
+          // 2. Inicia polling a cada 5s
+          pollRef.current = setInterval(async () => {
+            try {
+              // Filtra diretamente no servidor: somente runs COMPLETED iniciados
+              // após o momento em que o trigger foi feito. Evita comparação de
+              // strings ISO com formatos diferentes (Z vs +00:00) e garante que
+              // runs de pipelines anteriores não sejam confundidos com o atual.
+              const page = await listRuns({
+                project: projectId,
+                ordering: "-started_at",
+                status: "COMPLETED",
+                started_at_after: triggeredAt.current,
+              });
+              const found = page.data.results[0] ?? null;
+              if (found) {
+                setCompletedRun(found);
+                clearInterval(pollRef.current!);
+                pollRef.current = null;
+                // Cronômetro e etapas são parados pelo useEffect acima (on completedRun)
+              }
+            } catch (err: unknown) {
+              // Para erros 4xx (ex: 400 filtro inválido) o polling não vai se
+              // recuperar sozinho — interrompe para evitar spam de requisições
+              const status = (err as { status?: number })?.status;
+              if (status && status >= 400 && status < 500) {
+                setError(`Erro ao consultar execuções (${status}). Verifique os parâmetros.`);
+                clearInterval(pollRef.current!);
+                pollRef.current = null;
+                if (clockTimerRef.current) {
+                  clearInterval(clockTimerRef.current);
+                  clockTimerRef.current = null;
+                }
+              }
+              // Erros 5xx ou de rede são transitórios — deixa o polling continuar
             }
-          } catch (err: unknown) {
-            // Para erros 4xx (ex: 400 filtro inválido) o polling não vai se
-            // recuperar sozinho — interrompe para evitar spam de requisições
-            const status = (err as { status?: number })?.status;
-            if (status && status >= 400 && status < 500) {
-              setError(`Erro ao consultar execuções (${status}). Verifique os parâmetros.`);
-              clearInterval(pollRef.current!);
-              clearInterval(clockTimer);
-            }
-            // Erros 5xx ou de rede são transitórios — deixa o polling continuar
+          }, 5000);
+        })
+        .catch((err: unknown) => {
+          const msg = err instanceof Error ? err.message : String(err);
+          setError(msg);
+          if (clockTimerRef.current) {
+            clearInterval(clockTimerRef.current);
+            clockTimerRef.current = null;
           }
-        }, 5000);
-      })
-      .catch((err: unknown) => {
-        const msg = err instanceof Error ? err.message : String(err);
-        setError(msg);
-        clearInterval(clockTimer);
-      });
+        });
+    }
 
     return () => {
       timers.current.forEach(clearTimeout);
-      clearInterval(clockTimer);
-      if (pollRef.current) clearInterval(pollRef.current);
+      timers.current = [];
+      if (clockTimerRef.current) {
+        clearInterval(clockTimerRef.current);
+        clockTimerRef.current = null;
+      }
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
