@@ -89,7 +89,7 @@ export function UploadPreview({
 
     const result = await submit(payload);
     if (result) {
-      onSuccess(result.run_id, result.id);
+      onSuccess(result.id, result.run_id);
     }
   };
 
