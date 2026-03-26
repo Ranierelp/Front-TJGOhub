@@ -20,7 +20,9 @@ export function ResultsList({
   onPageChange,
   onMarkedFlaky,
 }: ResultsListProps) {
-  if (isLoading) {
+  // Spinner só quando não há resultados ainda. Se o polling atualizar enquanto
+  // a lista já está visível, não substitui o conteúdo — atualiza silenciosamente.
+  if (isLoading && results.length === 0) {
     return (
       <div className="flex justify-center py-12">
         <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#3B82F6" }} />

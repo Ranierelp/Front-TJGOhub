@@ -33,8 +33,9 @@ export function RunDetailClient({ runId }: RunDetailClientProps) {
     refetch,
   } = useRunDetail(runId);
 
-  // Estado 1: carregando cabecalho da run
-  if (isLoadingRun) {
+  // Estado 1: spinner só na carga inicial (run === null). Durante o polling,
+  // isLoadingRun fica true mas run já existe — mantém o conteúdo na tela.
+  if (isLoadingRun && !run) {
     return (
       <div className="flex justify-center py-20">
         <Loader2 className="h-6 w-6 animate-spin" style={{ color: "#3B82F6" }} />
