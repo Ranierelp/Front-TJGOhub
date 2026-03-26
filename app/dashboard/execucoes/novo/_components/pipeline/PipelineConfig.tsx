@@ -82,12 +82,12 @@ export function PipelineConfig({ onStart }: PipelineConfigProps) {
         padding: "12px 18px",
         marginBottom: 24,
         display: "flex",
-        alignItems: "flex-start",
+        alignItems: "center",
         gap: 10,
         fontSize: 13,
         color: "#2563eb",
       }}>
-        <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>ℹ</span>
+        <span style={{ fontSize: 16, flexShrink: 0 }}>ℹ</span>
         <span>
           Isso vai disparar uma pipeline no <strong>GitLab CI</strong> que executa
           os testes Playwright e envia os resultados automaticamente para o Hub.
