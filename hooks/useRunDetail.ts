@@ -9,7 +9,7 @@
 // re-buscar os dados da run. Cada efeito e independente.
 // =============================================================================
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   getRun,
   listRunResults,
@@ -57,6 +57,34 @@ export function useRunDetail(runId: string) {
       .catch(() => setResults([]))
       .finally(() => setIsLoadingResults(false));
   }, [runId, statusFilter, resultsPage, refreshKey]);
+
+  // Efeito 3: polling automatico enquanto status for PENDING ou RUNNING
+  // Quando o Celery processar o relatório, o status muda para COMPLETED e o
+  // polling para. O intervalo de 3s garante feedback rápido sem sobrecarga.
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    if (!run) return;
+
+    const isTransient = run.status === "PENDING" || run.status === "RUNNING";
+
+    if (isTransient && !pollingRef.current) {
+      pollingRef.current = setInterval(() => {
+        setRefreshKey((k) => k + 1);
+      }, 3000);
+    }
+
+    if (!isTransient && pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
+  }, [run?.status]);
 
   // Ao mudar o filtro de status, volta para pagina 1 dos resultados
   const setStatusFilter = useCallback((val: ResultStatusFilter) => {

@@ -17,7 +17,7 @@
 // Você pode trocar o visual sem tocar na lógica, e vice-versa.
 // =============================================================================
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, User, AlertTriangle, LockKeyhole } from "lucide-react";
@@ -45,8 +45,6 @@ export default function LoginPage() {
 
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [attemptCount, setAttemptCount] = useState(0);
-  const [isRateLimited, setIsRateLimited] = useState(false);
 
   const {
     register,
@@ -56,25 +54,14 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  useEffect(() => {
-    if (attemptCount >= 5) {
-      // Rate limit pode ser ativado aqui se necessário
-    }
-  }, [attemptCount]);
-
   const onSubmit = async (data: LoginFormData) => {
-    if (isRateLimited) {
-      setError("Muitas tentativas de login. Tente novamente em 5 minutos.");
-      return;
-    }
     setError("");
     try {
-      const result = await login({ username: data.username, password: data.password });
+      const result = await login({ email: data.email, password: data.password });
       if (result.success) {
         redirectToSystem();
       } else {
         setError(result.message);
-        setAttemptCount((prev) => prev + 1);
       }
     } catch (err: unknown) {
       setError("Erro de conexão. Verifique sua internet e tente novamente.");
@@ -109,18 +96,18 @@ export default function LoginPage() {
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
-        {/* Campo: usuário — label acima do input, igual ao Django */}
+        {/* Campo: e-mail — label acima do input, igual ao Django */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="username">
-            Usuário
+          <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="email">
+            E-mail
           </label>
           <Input
-            {...register("username")}
-            id="username"
+            {...register("email")}
+            id="email"
             autoComplete="email"
             className={INPUT_CLASS}
-            disabled={isSubmitting || isRateLimited}
-            error={errors.username?.message}
+            disabled={isSubmitting}
+            error={errors.email?.message}
             placeholder="usuario@tjgo.jus.br"
             startContent={<User className="h-4 w-4 text-gray-400" />}
           />
@@ -134,9 +121,7 @@ export default function LoginPage() {
             </label>
             <Link
               href="/auth/esqueci-senha"
-              className={`text-sm font-medium ${
-                isRateLimited ? "pointer-events-none text-gray-400" : "text-blue-600 hover:text-blue-800"
-              }`}
+              className="text-sm font-medium text-blue-600 hover:text-blue-800"
             >
               Esqueci minha senha
             </Link>
@@ -146,7 +131,7 @@ export default function LoginPage() {
             id="password"
             autoComplete="current-password"
             className={INPUT_CLASS}
-            disabled={isSubmitting || isRateLimited}
+            disabled={isSubmitting}
             error={errors.password?.message}
             placeholder="••••••••"
             startContent={<LockKeyhole className="h-4 w-4 text-gray-400" />}
@@ -169,7 +154,7 @@ export default function LoginPage() {
           type="submit"
           className="w-full font-semibold text-white border-0"
           style={{ background: "linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)" }}
-          disabled={isSubmitting || isRateLimited}
+          disabled={isSubmitting}
           isLoading={isSubmitting}
         >
           {isSubmitting ? "Entrando..." : "Entrar"}

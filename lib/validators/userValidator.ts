@@ -55,10 +55,10 @@ export const userUpdateSchema = z.object({
 
 // --- Schema para LOGIN ---
 export const loginSchema = z.object({
-  username: z
+  email: z
     .string()
-    .min(1, "O usuário é obrigatório.")
-    .max(254, "Nome de usuário muito longo."),
+    .min(1, "O e-mail é obrigatório.")
+    .max(254, "E-mail muito longo."),
   password: z
     .string()
     .min(6, "A senha deve ter pelo menos 6 caracteres.")

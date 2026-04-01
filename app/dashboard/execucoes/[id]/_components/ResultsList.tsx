@@ -10,6 +10,7 @@ interface ResultsListProps {
   isLoading: boolean;
   pagination: { page: number; totalPages: number; total: number };
   onPageChange: (page: number) => void;
+  onMarkedFlaky?: () => void;
 }
 
 export function ResultsList({
@@ -17,8 +18,11 @@ export function ResultsList({
   isLoading,
   pagination,
   onPageChange,
+  onMarkedFlaky,
 }: ResultsListProps) {
-  if (isLoading) {
+  // Spinner só quando não há resultados ainda. Se o polling atualizar enquanto
+  // a lista já está visível, não substitui o conteúdo — atualiza silenciosamente.
+  if (isLoading && results.length === 0) {
     return (
       <div className="flex justify-center py-12">
         <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#3B82F6" }} />
@@ -40,7 +44,7 @@ export function ResultsList({
   return (
     <div className="flex flex-col gap-2">
       {results.map((r) => (
-        <ResultCard key={r.id} result={r} />
+        <ResultCard key={r.id} result={r} onMarkedFlaky={onMarkedFlaky} />
       ))}
 
       {/* Paginacao — so aparece quando ha mais de uma pagina */}

@@ -22,7 +22,7 @@ const STATUS_STYLE: Record<string, { border: string; iconBg: string; iconColor: 
   SKIPPED: { border: "#64748b", iconBg: "#f1f5f9", iconColor: "#64748b", icon: "—" },
 };
 
-function ResultCard({ result }: { result: TestResult }) {
+function ResultCard({ result, onMarkedFlaky }: { result: TestResult; onMarkedFlaky?: () => void }) {
   const [expanded, setExpanded]           = useState(false);
   const [detail, setDetail]               = useState<TestResultDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
@@ -59,6 +59,7 @@ function ResultCard({ result }: { result: TestResult }) {
       await markResultAsFlaky(result.id);
       setLocalStatus("FLAKY");
       toast.success("Marcado como Flaky com sucesso");
+      onMarkedFlaky?.();
     } catch {
       toast.error("Erro ao marcar como Flaky");
     } finally {
@@ -80,9 +81,8 @@ function ResultCard({ result }: { result: TestResult }) {
 
   return (
     <div
+      className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
       style={{
-        background: "#ffffff",
-        border: "1px solid #dbe4ef",
         borderLeft: `4px solid ${style.border}`,
         borderRadius: "10px",
         boxShadow: "0 1px 3px rgba(26,35,50,0.05), 0 3px 10px rgba(26,35,50,0.03)",
@@ -91,12 +91,10 @@ function ResultCard({ result }: { result: TestResult }) {
     >
       {/* Cabecalho clicavel */}
       <button
-        className="w-full flex items-center gap-3 px-4 py-3 text-left"
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50"
         onClick={handleToggle}
         disabled={!canExpand}
-        style={{ cursor: canExpand ? "pointer" : "default", background: "transparent" }}
-        onMouseEnter={(e) => { if (canExpand) (e.currentTarget as HTMLButtonElement).style.background = "#f8fafd"; }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+        style={{ cursor: canExpand ? "pointer" : "default" }}
       >
         {/* Icone de status em quadrado arredondado */}
         <span style={{
@@ -115,7 +113,7 @@ function ResultCard({ result }: { result: TestResult }) {
                 {result.test_case_case_id}
               </span>
             )}
-            <p className="truncate" style={{ fontSize: 14, fontWeight: 600, color: "#1a2332" }}>
+            <p className="truncate" style={{ fontSize: 14, fontWeight: 600, color: "var(--col-heading)" }}>
               {displayTitle}
             </p>
           </div>
@@ -172,10 +170,9 @@ function ResultCard({ result }: { result: TestResult }) {
                 )}
                 <button
                   onClick={handleCopy}
+                  className="flex items-center gap-1 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600"
                   style={{
-                    display: "flex", alignItems: "center", gap: 4,
-                    background: "#f8fafd", color: "#5b6b7f",
-                    border: "1px solid #dbe4ef", borderRadius: 6, padding: "6px 12px",
+                    color: "var(--col-muted)", borderRadius: 6, padding: "6px 12px",
                     fontSize: 11, fontWeight: 600, cursor: "pointer",
                   }}
                 >

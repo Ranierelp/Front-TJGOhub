@@ -10,6 +10,12 @@ import { useRouter } from "next/navigation";
 import { MoreHorizontal, Server, TestTube, ChevronRight } from "lucide-react";
 import type { ProjectList } from "@/lib/api/projects";
 import { GlassCard } from "./GlassBackground";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 interface Props {
   project: ProjectList;
@@ -31,38 +37,34 @@ function StatusBadge({ isActive }: { isActive: boolean }) {
   );
 }
 
-// Menu de 3 pontos
+// Menu de 3 pontos — usa Radix DropdownMenu para acessibilidade completa
+// (fecha com Escape, gerencia foco, role="menuitem" automático)
 function ContextMenu({ project, onArchive, onDelete }: Omit<Props, "mode">) {
-  const [open, setOpen] = useState(false);
   const router = useRouter();
   return (
-    <div className="relative">
-      <button onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
-        className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-        style={{ color: "var(--col-muted)" }}>
-        <MoreHorizontal size={16} />
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-8 z-20 w-40 rounded-xl overflow-hidden"
-            style={{ background: "var(--glass-card-bg)", border: "1px solid var(--glass-card-border)", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", backdropFilter: "blur(16px)" }}>
-            <button onClick={(e) => { e.stopPropagation(); setOpen(false); router.push(`/dashboard/projetos/${project.id}/editar`); }}
-              className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" style={{ color: "var(--col-body)" }}>
-              ✏️ Editar
-            </button>
-            <button onClick={(e) => { e.stopPropagation(); setOpen(false); onArchive(project); }}
-              className="w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors" style={{ color: "#F59E0B" }}>
-              📦 Arquivar
-            </button>
-            <button onClick={(e) => { e.stopPropagation(); setOpen(false); onDelete(project); }}
-              className="w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" style={{ color: "#EF4444" }}>
-              🗑️ Excluir
-            </button>
-          </div>
-        </>
-      )}
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          onClick={(e) => e.stopPropagation()}
+          className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+          style={{ color: "var(--col-muted)" }}
+          aria-label="Opções do projeto"
+        >
+          <MoreHorizontal size={16} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-40">
+        <DropdownMenuItem onClick={() => router.push(`/dashboard/projetos/${project.id}/editar`)}>
+          ✏️ Editar
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onArchive(project)} className="text-amber-600 focus:text-amber-600">
+          📦 Arquivar
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onDelete(project)} className="text-red-600 focus:text-red-600">
+          🗑️ Excluir
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -75,7 +77,13 @@ export function ProjectCard({ project, mode, onArchive, onDelete }: Props) {
 
   if (mode === "list") {
     return (
-      <div onClick={goto} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+      <div
+        onClick={goto}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onKeyDown={(e) => e.key === "Enter" && goto()}
+        role="button"
+        tabIndex={0}
         className="flex items-center gap-4 px-5 py-3.5 cursor-pointer transition-colors"
         style={{ borderBottom: "1px solid var(--glass-inner-border)", background: hovered ? "rgba(239,246,255,0.4)" : "transparent" }}>
         <span className="text-xl">{emoji}</span>

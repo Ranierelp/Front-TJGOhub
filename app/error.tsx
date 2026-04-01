@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 
 /**
- * Página de erro padrão do aplicativo MedHub.
+ * Página de erro padrão do TJGOHub.
  * Exibida quando ocorrem erros recuperáveis.
  */
 export default function Error({

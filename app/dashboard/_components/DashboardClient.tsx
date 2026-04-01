@@ -110,8 +110,8 @@ export function DashboardClient() {
 
         {/* Badge indicando o projeto ativo — feedback visual do filtro atual */}
         {selectedProject && (
-          <span className="ml-auto text-xs text-blue-600 bg-blue-50 px-2.5 py-1
-                           rounded-full font-medium border border-blue-100">
+          <span className="ml-auto text-xs text-blue-600 dark:text-blue-300 bg-blue-50 dark:bg-blue-950 px-2.5 py-1
+                           rounded-full font-medium border border-blue-100 dark:border-blue-800">
             Filtrando: {selectedProject.name}
           </span>
         )}
@@ -133,17 +133,17 @@ export function DashboardClient() {
 
       {/* Estado: Erro */}
       {!loading && (error || !data) && (
-        <div className="rounded-xl bg-red-50 border border-red-200 p-8 text-center">
-          <p className="text-sm font-semibold text-red-700">
+        <div className="rounded-xl bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 p-8 text-center">
+          <p className="text-sm font-semibold text-red-700 dark:text-red-300">
             Não foi possível carregar os dados
           </p>
-          <p className="text-xs text-red-500 mt-1">
+          <p className="text-xs text-red-500 dark:text-red-400 mt-1">
             {error ?? "Verifique se o servidor está acessível."}
           </p>
           <button
             onClick={refetch}
-            className="mt-4 px-4 py-1.5 text-xs font-medium text-red-600 border border-red-300
-                       rounded-lg hover:bg-red-100 transition-colors"
+            className="mt-4 px-4 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 border border-red-300 dark:border-red-700
+                       rounded-lg hover:bg-red-100 dark:hover:bg-red-900 transition-colors"
           >
             Tentar novamente
           </button>

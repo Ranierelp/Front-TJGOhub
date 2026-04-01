@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { AlertTriangle } from "lucide-react";
 
 /**
- * Página de erro global crítico do MedHub.
+ * Página de erro global crítico do TJGOHub.
  * Exibida quando ocorre um erro que impede o funcionamento da aplicação.
  * Esta página é autocontida e não depende do layout raiz.
  */
@@ -41,7 +41,7 @@ export default function GlobalError({
                   Erro Crítico no Sistema
                 </h1>
                 <p className="text-gray-600">
-                  O MedHub encontrou um problema inesperado e precisa ser
+                  O TJGOHub encontrou um problema inesperado e precisa ser
                   reiniciado.
                 </p>
               </div>

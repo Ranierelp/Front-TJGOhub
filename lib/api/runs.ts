@@ -92,6 +92,7 @@ export interface ListRunsParams {
   project?: string;
   branch?: string;
   ordering?: string;
+  started_at_after?: string;
 }
 
 // ── Funcoes de API ────────────────────────────────────────────────────────────
@@ -127,4 +128,36 @@ export function markResultAsFlaky(id: string) {
   return post<{ detail: string }>(
     `${api.endpoints.results}${id}/mark-as-flaky/`,
   );
+}
+
+// Resposta do POST /api/v1/runs/upload-report/
+// O backend retorna 202 Accepted — o parse roda em background via Celery.
+// Por isso status é sempre "PENDING" imediatamente após o upload.
+export interface UploadReportResponse {
+  run_id: string;   // ex: "run-20260313-001" — ID legível humano
+  id:     string;   // UUID do TestRun no banco
+  status: "PENDING";
+  detail: string;   // mensagem informativa
+}
+
+/** Envia o JSON do relatório Playwright para processamento em background */
+export function uploadReport(data: unknown) {
+  return post<UploadReportResponse>(api.endpoints.uploadReport, data);
+}
+
+// Resposta do POST /api/v1/runs/trigger-pipeline/
+// O backend chama o GitLab API e retorna os dados da pipeline criada.
+export interface TriggerPipelineResponse {
+  gitlab_pipeline_id: number;  // ID numérico da pipeline no GitLab
+  web_url:            string;  // link direto para a pipeline no GitLab
+  status:             string;  // status inicial: "created" | "pending" | "running"
+}
+
+/** Dispara uma pipeline no GitLab CI a partir do TJGOHub */
+export function triggerPipeline(data: {
+  project_id:     string;
+  environment_id: string;
+  branch:         string;
+}) {
+  return post<TriggerPipelineResponse>("/api/v1/runs/trigger-pipeline/", data);
 }

@@ -1,5 +1,6 @@
 // Cabecalho da listagem: titulo com contagem + botao "Nova Execucao"
 
+import Link from "next/link";
 import { Play } from "lucide-react";
 
 interface RunsHeaderProps {
@@ -33,11 +34,13 @@ export function RunsHeader({ total }: RunsHeaderProps) {
         </h1>
       </div>
 
-      <button
+      <Link
+        href="/dashboard/execucoes/novo"
         className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold text-white transition-all"
         style={{
           background: "linear-gradient(135deg,#2563EB,#3B82F6)",
           boxShadow: "0 2px 10px rgba(37,99,235,0.25)",
+          textDecoration: "none",
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.background = "linear-gradient(135deg,#1D4ED8,#2563EB)";
@@ -50,7 +53,7 @@ export function RunsHeader({ total }: RunsHeaderProps) {
       >
         <Play size={14} aria-hidden="true" />
         Nova Execucao
-      </button>
+      </Link>
     </div>
   );
 }

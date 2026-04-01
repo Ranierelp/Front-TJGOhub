@@ -31,27 +31,16 @@
 // =============================================================================
 import { CaseDetailClient } from "./_components/CaseDetailClient";
 
-// params → objeto com os valores das partes dinâmicas da URL
-// Se a URL for /dashboard/casos/abc-123/, então params.id = "abc-123"
-export default function CasoDetalhePage({
+// Next.js 15: params é uma Promise em server components (precisa de await).
+export default async function CasoDetalhePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  // Por enquanto, apenas renderizamos o Client Component.
-  // O "id" está disponível em params.id — vamos usar no Passo 3.
-  // console.log("ID do caso:", params.id);  ← rodaria no servidor (terminal)
-
-  // "max-w-7xl mx-auto px-4 py-6" — mesmo wrapper de todas as páginas do dashboard:
-  //   max-w-7xl  → largura máxima 1280px (não estica demais em telas grandes)
-  //   mx-auto    → centraliza horizontalmente (equivalente a margin: 0 auto no CSS)
-  //   px-4 py-6  → padding horizontal 16px + vertical 24px
-  //
-  // Sem isso: conteúdo ocupa 100% da tela, sem margem lateral (o que estava acontecendo).
-  // Com isso: alinhado com a listagem (CasosPage) e o formulário (NovoCasoPage).
+  const { id } = await params;
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      <CaseDetailClient id={params.id} />
+      <CaseDetailClient id={id} />
     </div>
   );
 }
