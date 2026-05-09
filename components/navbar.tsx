@@ -3,7 +3,7 @@
 import React from "react";
 import NextLink from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { LogOut, Settings, LayoutDashboard, Menu, X, Bell } from "lucide-react";
+import { LogOut, Settings, LayoutDashboard, Menu, X, Bell, Calendar } from "lucide-react";
 import { useState } from "react";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -114,6 +114,12 @@ export const Navbar = () => {
   const isAdminOrStaff =
     user?.roles?.includes("admin") || user?.roles?.includes("staff");
 
+  const formattedDate = new Date().toLocaleDateString("pt-BR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
   return (
     // Wrapper sticky: as DUAS barras (azul + branca) grudam juntas no topo.
     // Sem o wrapper, só a barra azul ficaria fixa e o subnav rolaria com a página.
@@ -125,7 +131,7 @@ export const Navbar = () => {
       <nav
         style={{ background: "linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)" }}
       >
-        <div className="mx-auto flex max-w-7xl items-center px-6 h-14 gap-3">
+        <div className="w-full flex items-center px-4 lg:px-6 h-14 gap-3">
 
           {/* Botão hamburguer — visível só em mobile (sm:hidden) */}
           <button
@@ -138,7 +144,7 @@ export const Navbar = () => {
           </button>
 
           {/* ── BRAND: escudo + TJGO (negrito) + subtítulo (suave) ── */}
-          <NextLink className="flex items-center gap-3" href="/dashboard">
+          <NextLink className="flex items-center gap-3 flex-shrink-0" href="/dashboard">
             <TjgoShield />
             <span className="font-bold text-white text-base tracking-tight">TJGO</span>
             <span className="hidden sm:inline text-white/75 text-sm font-normal">
@@ -160,6 +166,15 @@ export const Navbar = () => {
 
             {/* Toggle de tema claro/escuro */}
             <ThemeSwitcher />
+
+            {/* Data atual — visível em sm+ */}
+            <div
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white/90 text-xs font-medium"
+              style={{ background: "rgba(255,255,255,0.12)" }}
+            >
+              <Calendar size={13} className="text-white/70" />
+              <span>{formattedDate}</span>
+            </div>
 
             {/*
               CONCEITO 6: Renderização condicional com &&
@@ -263,7 +278,7 @@ export const Navbar = () => {
         Paralelo Django: {% if request.path == item.href %}class="active"{% endif %}
       */}
       <div className="hidden sm:block bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700">
-        <div className="mx-auto max-w-7xl px-6">
+        <div className="w-full px-4 lg:px-6">
           <div className="flex items-center gap-1">
             {siteConfig.navItems.map((item) => {
               // Lógica de aba ativa — explicada no CONCEITO 5 acima
@@ -299,6 +314,11 @@ export const Navbar = () => {
       */}
       {isMenuOpen && (
         <div className="sm:hidden bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 px-4 py-2 space-y-0.5">
+          {/* Data no mobile */}
+          <div className="flex items-center gap-1.5 px-2 py-2 text-xs text-gray-500 dark:text-slate-400 border-b border-gray-100 dark:border-slate-800 mb-1">
+            <Calendar size={12} />
+            <span>{formattedDate}</span>
+          </div>
           {siteConfig.navItems.map((item) => {
             const isActive =
               item.href === "/dashboard"
