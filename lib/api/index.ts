@@ -49,5 +49,11 @@ export const api = {
     uploadReport: "/api/v1/runs/upload-report/",
     results: "/api/v1/results/",
     tags: "/api/v1/tags/",
+
+    // Kanban
+    kanbanBoard: "/api/v1/kanban/board/",
+    kanbanColumns: "/api/v1/kanban/columns/",
+    reorderColumns: "/api/v1/kanban/columns/reorder/",
+    moveCase: (id: string) => `/api/v1/test-cases/${id}/move/`,
   },
 };
