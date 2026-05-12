@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import type { ProjectList } from "@/lib/api/projects";
 
 interface ArchiveModalProps {
@@ -87,6 +88,39 @@ export function DeleteModal({ project, onConfirm, onCancel }: DeleteModalProps) 
   );
 }
 
+interface ActivateModalProps {
+  project: ProjectList;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+export function ActivateModal({ project, onConfirm, onCancel }: ActivateModalProps) {
+  return (
+    <Overlay>
+      <div className="w-full max-w-sm p-6 rounded-2xl text-center space-y-4" style={{
+        background: "var(--glass-card-bg)", backdropFilter: "blur(24px)",
+        border: "1px solid var(--glass-card-border)", boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+      }}>
+        <div className="text-4xl">📂</div>
+        <h2 className="text-lg font-extrabold" style={{ color: "var(--col-heading)" }}>Desarquivar Projeto?</h2>
+        <p className="text-sm" style={{ color: "var(--col-muted)" }}>
+          <strong style={{ color: "var(--col-body)" }}>{project.name}</strong> voltará a aparecer nas listagens e poderá receber novos casos de teste.
+        </p>
+        <div className="flex gap-3 pt-2">
+          <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+            style={{ border: "1px solid var(--glass-inner-border)", color: "var(--col-muted)", background: "transparent" }}>
+            Cancelar
+          </button>
+          <button onClick={onConfirm} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-all"
+            style={{ background: "linear-gradient(135deg,#10B981,#059669)", boxShadow: "0 2px 10px rgba(16,185,129,0.3)" }}>
+            Desarquivar
+          </button>
+        </div>
+      </div>
+    </Overlay>
+  );
+}
+
 // Modal simples de exclusão — sem campo de confirmação por digitação.
 // Usado para itens de menor peso (casos de teste, ambientes, etc.)
 interface SimpleDeleteModalProps {
@@ -128,11 +162,15 @@ export function SimpleDeleteModal({ title, description, onConfirm, onCancel }: S
 }
 
 // Overlay escuro com blur
-function Overlay({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
+// Usa createPortal para renderizar direto no document.body, escapando de
+// qualquer ancestor com CSS transform (ex: animate-slide-up) que quebraria
+// position: fixed ao criar um novo containing block.
+export function Overlay({ children }: { children: React.ReactNode }) {
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
       style={{ background: "rgba(0,0,0,0.35)", backdropFilter: "blur(4px)" }}>
       {children}
-    </div>
+    </div>,
+    document.body,
   );
 }

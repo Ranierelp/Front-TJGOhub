@@ -10,10 +10,10 @@ import { Search, Plus, LayoutGrid, List, Loader2, FolderOpen } from "lucide-reac
 import { toast } from "sonner";
 
 import { useProjectList, type StatusFilter } from "@/hooks/useProjectList";
-import { archiveProject, deleteProject, type ProjectList } from "@/lib/api/projects";
+import { archiveProject, activateProject, hardDeleteProject, type ProjectList } from "@/lib/api/projects";
 import { GlassBackground, GlassCard } from "./GlassBackground";
 import { ProjectCard } from "./ProjectCard";
-import { ArchiveModal, DeleteModal } from "./ProjectModals";
+import { ArchiveModal, ActivateModal, DeleteModal } from "./ProjectModals";
 
 type ViewMode = "grid" | "list";
 
@@ -44,8 +44,9 @@ export function ProjectListClient() {
   const router = useRouter();
   const { projects, count, loading, page, setPage, totalPages, search, setSearch, statusFilter, setStatusFilter, refetch } = useProjectList();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [archiveTarget, setArchiveTarget] = useState<ProjectList | null>(null);
-  const [deleteTarget, setDeleteTarget]   = useState<ProjectList | null>(null);
+  const [archiveTarget,   setArchiveTarget]   = useState<ProjectList | null>(null);
+  const [activateTarget,  setActivateTarget]  = useState<ProjectList | null>(null);
+  const [deleteTarget,    setDeleteTarget]    = useState<ProjectList | null>(null);
 
   // Stats derivados da lista atual
   const active   = projects.filter((p) => p.is_active).length;
@@ -61,11 +62,21 @@ export function ProjectListClient() {
     } catch { toast.error("Erro ao arquivar projeto"); }
   }
 
+  async function handleActivate() {
+    if (!activateTarget) return;
+    try {
+      await activateProject(activateTarget.id);
+      toast.success("Projeto desarquivado com sucesso");
+      setActivateTarget(null);
+      refetch();
+    } catch { toast.error("Erro ao desarquivar projeto"); }
+  }
+
   async function handleDelete() {
     if (!deleteTarget) return;
     try {
-      await deleteProject(deleteTarget.id);
-      toast.success("Projeto excluído com sucesso");
+      await hardDeleteProject(deleteTarget.id);
+      toast.success("Projeto excluído permanentemente");
       setDeleteTarget(null);
       refetch();
     } catch { toast.error("Erro ao excluir projeto"); }
@@ -154,13 +165,13 @@ export function ProjectListClient() {
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {projects.map((p) => (
-              <ProjectCard key={p.id} project={p} mode="grid" onArchive={setArchiveTarget} onDelete={setDeleteTarget} />
+              <ProjectCard key={p.id} project={p} mode="grid" onArchive={setArchiveTarget} onActivate={setActivateTarget} onDelete={setDeleteTarget} />
             ))}
           </div>
         ) : (
           <GlassCard>
             {projects.map((p) => (
-              <ProjectCard key={p.id} project={p} mode="list" onArchive={setArchiveTarget} onDelete={setDeleteTarget} />
+              <ProjectCard key={p.id} project={p} mode="list" onArchive={setArchiveTarget} onActivate={setActivateTarget} onDelete={setDeleteTarget} />
             ))}
           </GlassCard>
         )}
@@ -185,8 +196,9 @@ export function ProjectListClient() {
         )}
       </div>
 
-      {archiveTarget && <ArchiveModal project={archiveTarget} onConfirm={handleArchive} onCancel={() => setArchiveTarget(null)} />}
-      {deleteTarget  && <DeleteModal  project={deleteTarget}  onConfirm={handleDelete}  onCancel={() => setDeleteTarget(null)}  />}
+      {archiveTarget  && <ArchiveModal  project={archiveTarget}  onConfirm={handleArchive}  onCancel={() => setArchiveTarget(null)}  />}
+      {activateTarget && <ActivateModal project={activateTarget} onConfirm={handleActivate} onCancel={() => setActivateTarget(null)} />}
+      {deleteTarget   && <DeleteModal   project={deleteTarget}   onConfirm={handleDelete}   onCancel={() => setDeleteTarget(null)}   />}
     </div>
   );
 }

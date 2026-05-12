@@ -77,8 +77,13 @@ export function activateProject(id: string) {
   return post<ProjectDetail>(`${api.endpoints.projects}${id}/activate/`);
 }
 
-/** Exclui permanentemente (hard delete via DELETE) */
+/** Soft delete legado — mantido para compatibilidade, prefer hardDeleteProject */
 export function deleteProject(id: string) {
   return del(`${api.endpoints.projects}${id}/`);
+}
+
+/** Remove o projeto permanentemente do banco (hard delete) */
+export function hardDeleteProject(id: string) {
+  return del(`${api.endpoints.projects}${id}/hard-delete/`);
 }
   
