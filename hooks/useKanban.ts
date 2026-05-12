@@ -14,7 +14,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { DropResult } from "@hello-pangea/dnd";
 
-import { get, post, api } from "@/lib/api";
+import { get, post, del, api } from "@/lib/api";
 import type { KanbanBoardColumn } from "@/lib/types/kanban";
 
 export function useKanban(projectId?: string) {
@@ -77,5 +77,23 @@ export function useKanban(projectId?: string) {
     });
   }, [columns]);
 
-  return { columns, loading, error, refetch: fetchBoard, onDragEnd };
+  const createColumn = useCallback(async (name: string, color: string) => {
+    await post(api.endpoints.kanbanColumns, {
+      name,
+      color,
+      order: columns.length,
+      project: null,
+    });
+    fetchBoard();
+  }, [columns.length, fetchBoard]);
+
+  const deleteColumn = useCallback(async (id: string, targetColumnId?: string) => {
+    const url = targetColumnId
+      ? `${api.endpoints.kanbanColumns}${id}/?target_column_id=${targetColumnId}`
+      : `${api.endpoints.kanbanColumns}${id}/`;
+    await del(url);
+    fetchBoard();
+  }, [fetchBoard]);
+
+  return { columns, loading, error, refetch: fetchBoard, onDragEnd, createColumn, deleteColumn };
 }
