@@ -21,6 +21,7 @@ interface Props {
   project: ProjectList;
   mode: "grid" | "list";
   onArchive: (project: ProjectList) => void;
+  onActivate: (project: ProjectList) => void;
   onDelete: (project: ProjectList) => void;
 }
 
@@ -39,13 +40,15 @@ function StatusBadge({ isActive }: { isActive: boolean }) {
 
 // Menu de 3 pontos — usa Radix DropdownMenu para acessibilidade completa
 // (fecha com Escape, gerencia foco, role="menuitem" automático)
-function ContextMenu({ project, onArchive, onDelete }: Omit<Props, "mode">) {
+function ContextMenu({ project, onArchive, onActivate, onDelete }: Omit<Props, "mode">) {
   const router = useRouter();
   return (
+    // div para parar a propagação de qualquer clique dentro do menu
+    // (DropdownMenuContent usa Portal, mas eventos ainda borbulham pelo React tree)
+    <div onClick={(e) => e.stopPropagation()}>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          onClick={(e) => e.stopPropagation()}
           className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
           style={{ color: "var(--col-muted)" }}
           aria-label="Opções do projeto"
@@ -57,18 +60,25 @@ function ContextMenu({ project, onArchive, onDelete }: Omit<Props, "mode">) {
         <DropdownMenuItem onClick={() => router.push(`/dashboard/projetos/${project.id}/editar`)}>
           ✏️ Editar
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onArchive(project)} className="text-amber-600 focus:text-amber-600">
-          📦 Arquivar
-        </DropdownMenuItem>
+        {project.is_active ? (
+          <DropdownMenuItem onClick={() => onArchive(project)} className="text-amber-600 focus:text-amber-600">
+            📦 Arquivar
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem onClick={() => onActivate(project)} className="text-emerald-600 focus:text-emerald-600">
+            📂 Desarquivar
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={() => onDelete(project)} className="text-red-600 focus:text-red-600">
           🗑️ Excluir
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    </div>
   );
 }
 
-export function ProjectCard({ project, mode, onArchive, onDelete }: Props) {
+export function ProjectCard({ project, mode, onArchive, onActivate, onDelete }: Props) {
   const router = useRouter();
   const [hovered, setHovered] = useState(false);
   const goto = () => router.push(`/dashboard/projetos/${project.id}`);
@@ -96,7 +106,7 @@ export function ProjectCard({ project, mode, onArchive, onDelete }: Props) {
           <span>🧪 {project.test_cases_count}</span>
         </div>
         <StatusBadge isActive={project.is_active} />
-        <ContextMenu project={project} onArchive={onArchive} onDelete={onDelete} />
+        <ContextMenu project={project} onArchive={onArchive} onActivate={onActivate} onDelete={onDelete} />
         <ChevronRight size={16} style={{ color: "var(--col-dim)", opacity: hovered ? 1 : 0, transition: "opacity 0.15s" }} />
       </div>
     );
@@ -117,7 +127,7 @@ export function ProjectCard({ project, mode, onArchive, onDelete }: Props) {
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <StatusBadge isActive={project.is_active} />
-          <ContextMenu project={project} onArchive={onArchive} onDelete={onDelete} />
+          <ContextMenu project={project} onArchive={onArchive} onActivate={onActivate} onDelete={onDelete} />
         </div>
       </div>
 
