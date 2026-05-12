@@ -16,7 +16,7 @@ export function useProjectList() {
   const [loading, setLoading]     = useState(true);
   const [page, setPage]           = useState(1);
   const [search, setSearch]       = useState("");
-  const [statusFilter, setStatus] = useState<StatusFilter>("all");
+  const [statusFilter, setStatus] = useState<StatusFilter>("active");
   // refreshKey garante re-fetch mesmo quando os outros filtros não mudam
   const [refreshKey, setRefreshKey] = useState(0);
 
