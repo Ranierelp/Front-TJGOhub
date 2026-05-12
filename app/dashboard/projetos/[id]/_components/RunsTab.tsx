@@ -11,12 +11,13 @@ import { GlassCard } from "../../_components/GlassBackground";
 interface Run {
   id: string;
   run_number?: number;
-  executed_at: string;
-  executed_by_name?: string;
-  passed_count: number;
-  failed_count: number;
-  blocked_count: number;
-  total_count: number;
+  started_at: string;
+  triggered_by_name?: string;
+  passed_tests: number;
+  failed_tests: number;
+  skipped_tests: number;
+  total_tests: number;
+  success_rate: number;
 }
 
 interface DRFPage<T> { count: number; results: T[]; }
@@ -51,11 +52,13 @@ export function RunsTab({ projectId }: { projectId: string }) {
   return (
     <div className="flex flex-col gap-3">
       {runs.map((run, idx) => {
-        const total = run.total_count || 1;
-        const passedPct  = Math.round((run.passed_count / total) * 100);
-        const failedPct  = Math.round((run.failed_count / total) * 100);
-        const blockedPct = 100 - passedPct - failedPct;
-        const date = new Date(run.executed_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+        const total      = run.total_tests || 1;
+        const passedPct  = Math.round((run.passed_tests  / total) * 100);
+        const failedPct  = Math.round((run.failed_tests  / total) * 100);
+        const skippedPct = 100 - passedPct - failedPct;
+        const date = run.started_at
+          ? new Date(run.started_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })
+          : "—";
 
         return (
           <GlassCard key={run.id} interactive className="p-5 space-y-3"
@@ -68,22 +71,22 @@ export function RunsTab({ projectId }: { projectId: string }) {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <p className="text-xs" style={{ color: "var(--col-dim)" }}>{date} · {run.executed_by_name}</p>
+                <p className="text-xs" style={{ color: "var(--col-dim)" }}>{date} · {run.triggered_by_name}</p>
                 <ChevronRight size={14} style={{ color: "var(--col-dim)" }} />
               </div>
             </div>
 
             <div className="flex items-center gap-4 text-xs">
-              <span className="flex items-center gap-1" style={{ color: "#10B981" }}>✓ {run.passed_count} aprovados</span>
-              <span className="flex items-center gap-1" style={{ color: "#EF4444" }}>✗ {run.failed_count} falhos</span>
-              <span className="flex items-center gap-1" style={{ color: "#F59E0B" }}>⏸ {run.blocked_count} bloqueados</span>
+              <span className="flex items-center gap-1" style={{ color: "#10B981" }}>✓ {run.passed_tests} aprovados</span>
+              <span className="flex items-center gap-1" style={{ color: "#EF4444" }}>✗ {run.failed_tests} falhos</span>
+              <span className="flex items-center gap-1" style={{ color: "#F59E0B" }}>⏸ {run.skipped_tests} bloqueados</span>
             </div>
 
             {/* Barra de progresso */}
             <div className="flex h-2 rounded-full overflow-hidden gap-0.5">
               <div style={{ width: `${passedPct}%`, background: "#10B981" }} />
               <div style={{ width: `${failedPct}%`, background: "#EF4444" }} />
-              <div style={{ width: `${blockedPct}%`, background: "#F59E0B" }} />
+              <div style={{ width: `${skippedPct}%`, background: "#F59E0B" }} />
             </div>
 
             <p className="text-xs font-semibold" style={{ color: "#10B981" }}>{passedPct}% aprovado</p>
