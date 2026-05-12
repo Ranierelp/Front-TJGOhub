@@ -37,6 +37,7 @@ import { FolderOpen, X } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useProjects }      from "@/hooks/useProjects";
 import { Spinner }          from "@/components/ui/spinner";
+import { Select }           from "@/components/ui/select";
 import { LastRunCard }      from "./LastRunCard";
 import { PassRateCard }     from "./PassRateCard";
 import { TopFailuresCard }  from "./TopFailuresCard";
@@ -79,13 +80,11 @@ export function DashboardClient() {
 
           Paralelo Django: <select name="projeto"> com selected dinâmico.
         */}
-        <select
+        <Select
           value={projectId}
           onChange={(e) => setProjectId(e.target.value)}
           disabled={projectsLoading}
-          className="text-sm border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-1.5 text-gray-700 dark:text-slate-200
-                     bg-white dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500
-                     disabled:opacity-50 min-w-48"
+          containerClassName="w-auto min-w-48"
         >
           <option value="">Todos os projetos</option>
           {projects.map((p) => (
@@ -93,7 +92,7 @@ export function DashboardClient() {
               {p.name}
             </option>
           ))}
-        </select>
+        </Select>
 
         {/* Botão "Limpar filtro" — aparece somente quando há projeto selecionado */}
         {projectId && (
