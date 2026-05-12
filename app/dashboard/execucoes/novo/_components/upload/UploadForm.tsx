@@ -55,21 +55,6 @@ export function UploadForm({ onNext }: UploadFormProps) {
 
   const canProceed = Boolean(projectId && environmentId && file && fileData);
 
-  const selectStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "10px 14px",
-    borderRadius: 8,
-    border: "1.5px solid var(--glass-card-border)",
-    background: "var(--glass-field-bg)",
-    fontSize: 14,
-    color: "var(--col-heading)",
-    fontFamily: "inherit",
-    appearance: "none" as const,
-    backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235b6b7f' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")",
-    backgroundRepeat: "no-repeat",
-    backgroundPosition: "right 12px center",
-    paddingRight: 36,
-  };
 
   const labelStyle: React.CSSProperties = {
     fontSize: 11,
@@ -104,7 +89,7 @@ export function UploadForm({ onNext }: UploadFormProps) {
             value={projectId}
             onChange={(e) => handleProjectChange(e.target.value)}
             disabled={loadingProjects}
-            style={selectStyle}
+            className="glass-input w-full rounded-lg px-3.5 py-2.5 text-sm appearance-none"
           >
             <option value="">
               {loadingProjects ? "Carregando..." : "Selecione um projeto..."}
@@ -124,7 +109,7 @@ export function UploadForm({ onNext }: UploadFormProps) {
             value={environmentId}
             onChange={(e) => setEnvironmentId(e.target.value)}
             disabled={!projectId || loadingEnvironments}
-            style={selectStyle}
+            className="glass-input w-full rounded-lg px-3.5 py-2.5 text-sm appearance-none"
           >
             <option value="">
               {!projectId

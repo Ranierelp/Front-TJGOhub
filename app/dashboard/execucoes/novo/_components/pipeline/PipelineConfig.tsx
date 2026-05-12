@@ -36,21 +36,6 @@ export function PipelineConfig({ onStart }: PipelineConfigProps) {
 
   const canStart = Boolean(projectId && environmentId && branch);
 
-  const selectStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "10px 14px",
-    borderRadius: 8,
-    border: "1.5px solid var(--glass-card-border)",
-    background: "var(--glass-field-bg)",
-    fontSize: 14,
-    color: "var(--col-heading)",
-    fontFamily: "inherit",
-    appearance: "none" as const,
-    backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235b6b7f' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")",
-    backgroundRepeat: "no-repeat",
-    backgroundPosition: "right 12px center",
-    paddingRight: 36,
-  };
 
   const cardStyle: React.CSSProperties = {
     background: "var(--glass-card-bg)",
@@ -98,7 +83,7 @@ export function PipelineConfig({ onStart }: PipelineConfigProps) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 24 }}>
         <div style={cardStyle}>
           <label style={labelStyle}>Projeto <span style={{ color: "#dc2626" }}>*</span></label>
-          <select value={projectId} onChange={(e) => handleProjectChange(e.target.value)} style={selectStyle}>
+          <select value={projectId} onChange={(e) => handleProjectChange(e.target.value)} className="glass-input w-full rounded-lg px-3.5 py-2.5 text-sm appearance-none">
             <option value="">{loadingProjects ? "Carregando..." : "Selecione..."}</option>
             {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
@@ -106,7 +91,7 @@ export function PipelineConfig({ onStart }: PipelineConfigProps) {
 
         <div style={{ ...cardStyle, opacity: projectId ? 1 : 0.45, transition: "opacity 0.2s" }}>
           <label style={labelStyle}>Ambiente <span style={{ color: "#dc2626" }}>*</span></label>
-          <select value={environmentId} onChange={(e) => setEnvironmentId(e.target.value)} disabled={!projectId || loadingEnvironments} style={selectStyle}>
+          <select value={environmentId} onChange={(e) => setEnvironmentId(e.target.value)} disabled={!projectId || loadingEnvironments} className="glass-input w-full rounded-lg px-3.5 py-2.5 text-sm appearance-none">
             <option value="">{!projectId ? "Selecione um projeto primeiro" : loadingEnvironments ? "Carregando..." : "Selecione..."}</option>
             {environments.map((env) => <option key={env.id} value={env.id}>{env.env_type_display}</option>)}
           </select>
@@ -120,7 +105,7 @@ export function PipelineConfig({ onStart }: PipelineConfigProps) {
             onChange={(e) => setBranch(e.target.value)}
             disabled={!projectId}
             placeholder="ex: main"
-            style={{ ...selectStyle, backgroundImage: "none", paddingRight: 14 }}
+            className="glass-input w-full rounded-lg px-3.5 py-2.5 text-sm"
           />
         </div>
       </div>
