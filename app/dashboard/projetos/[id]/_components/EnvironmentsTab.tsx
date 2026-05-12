@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Loader2, Plus, Globe, Trash2, Server } from "lucide-react";
 import { toast } from "sonner";
 import { GlassCard } from "../../_components/GlassBackground";
-import { SimpleDeleteModal } from "../../_components/ProjectModals";
+import { SimpleDeleteModal, Overlay } from "../../_components/ProjectModals";
 import {
   listEnvironments, createEnvironment, archiveEnvironment,
   type EnvironmentItem,
@@ -45,8 +45,7 @@ function CreateEnvModal({ projectId, onSuccess, onCancel }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
-      style={{ background: "rgba(0,0,0,0.35)", backdropFilter: "blur(4px)" }}>
+    <Overlay>
       <div className="w-full max-w-sm p-6 rounded-2xl space-y-4" style={{
         background: "var(--glass-card-bg)", backdropFilter: "blur(24px)",
         border: "1px solid var(--glass-card-border)", boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
@@ -89,7 +88,7 @@ function CreateEnvModal({ projectId, onSuccess, onCancel }: {
           </div>
         </form>
       </div>
-    </div>
+    </Overlay>
   );
 }
 
