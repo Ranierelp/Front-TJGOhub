@@ -25,11 +25,20 @@ export interface PendingStep {
 
 interface ApiProject { id: string; name: string; }
 interface ApiTag     { id: string; name: string; color: string; }
+// Usuário para o select de "Responsável" — só os campos que a UI precisa.
+// O backend retorna mais coisas (groups, is_staff etc.), mas ignoramos.
+export interface ApiUser {
+  id:         string;
+  email:      string;
+  first_name: string;
+  last_name:  string;
+}
 interface DRFList<T> { results: T[]; }
 
 export interface UseCreateCaseReturn {
   projects:   ApiProject[];
   tags:       ApiTag[];
+  users:      ApiUser[];
   loading:    boolean;
   submitting: boolean;
   submit:     (formData: Record<string, unknown>, steps: PendingStep[]) => Promise<void>;
@@ -40,20 +49,23 @@ export function useCreateCase(): UseCreateCaseReturn {
 
   const [projects,   setProjects]   = useState<ApiProject[]>([]);
   const [tags,       setTags]       = useState<ApiTag[]>([]);
+  const [users,      setUsers]      = useState<ApiUser[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [projResp, tagsResp] = await Promise.all([
+        const [projResp, tagsResp, usersResp] = await Promise.all([
           get<DRFList<ApiProject>>(api.endpoints.projects),
           get<DRFList<ApiTag>>(api.endpoints.tags),
+          get<DRFList<ApiUser>>(api.endpoints.users),
         ]);
         setProjects(projResp.data.results);
         setTags(tagsResp.data.results);
+        setUsers(usersResp.data.results);
       } catch {
-        toast.error("Erro ao carregar projetos e tags");
+        toast.error("Erro ao carregar dados do formulário");
       } finally {
         setLoading(false);
       }
@@ -68,12 +80,15 @@ export function useCreateCase(): UseCreateCaseReturn {
       const caseResp = await post<{ id: string }>(api.endpoints.testCases, formData);
       const caseId   = caseResp.data.id;
 
+      // Envia todos os passos — a imagem é opcional.
+      // Passos só com descrição (sem imagem) também são persistidos.
       const attachUrl = `${api.endpoints.testCases}${caseId}/add-attachment/`;
       for (let i = 0; i < steps.length; i++) {
         const step = steps[i];
-        if (!step.image) continue; // passos sem imagem são ignorados
+        // Ignora passos completamente vazios (sem imagem E sem descrição)
+        if (!step.image && !step.description.trim()) continue;
         const fd = new FormData();
-        fd.append("file",        step.image);
+        if (step.image) fd.append("file", step.image);
         fd.append("title",       `Passo ${i + 1}`);
         fd.append("description", step.description);
         fd.append("order",       String(i));
@@ -98,5 +113,5 @@ export function useCreateCase(): UseCreateCaseReturn {
     }
   };
 
-  return { projects, tags, loading, submitting, submit };
+  return { projects, tags, users, loading, submitting, submit };
 }
