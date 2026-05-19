@@ -27,6 +27,8 @@ const schema = z.object({
   case_id:         z.string().min(1, "Obrigatório").max(50),
   title:           z.string().min(1, "Obrigatório").max(255),
   status:          z.enum(["DRAFT", "ACTIVE", "DEPRECATED"]),
+  priority:        z.enum(["CRITICAL", "HIGH", "MEDIUM", "LOW"]),
+  assigned_to:     z.string().optional(),
   module:          z.string().max(100).optional(),
   expected_result: z.string().optional(),
   observations:    z.string().optional(),
@@ -42,6 +44,14 @@ const STATUS_OPTS = [
   { value: "DRAFT"      as const, label: "Rascunho",  emoji: "✏️", g: "linear-gradient(135deg,#FEF3C7,#FDE68A)", b: "#F59E0B", t: "#92400E" },
   { value: "ACTIVE"     as const, label: "Ativo",      emoji: "⚡", g: "linear-gradient(135deg,#D1FAE5,#A7F3D0)", b: "#10B981", t: "#065F46" },
   { value: "DEPRECATED" as const, label: "Depreciado", emoji: "📦", g: "linear-gradient(135deg,#FEE2E2,#FECACA)", b: "#EF4444", t: "#991B1B" },
+];
+
+// Mantido em sincronia com CreateCaseClient.tsx (mesma paleta visual).
+const PRIORITY_OPTS = [
+  { value: "CRITICAL" as const, label: "Crítica", emoji: "🔥", g: "linear-gradient(135deg,#FEE2E2,#FECACA)", b: "#DC2626", t: "#991B1B" },
+  { value: "HIGH"     as const, label: "Alta",    emoji: "⚡", g: "linear-gradient(135deg,#FFEDD5,#FED7AA)", b: "#EA580C", t: "#9A3412" },
+  { value: "MEDIUM"   as const, label: "Média",   emoji: "●",  g: "linear-gradient(135deg,#DBEAFE,#BFDBFE)", b: "#2563EB", t: "#1D4ED8" },
+  { value: "LOW"      as const, label: "Baixa",   emoji: "↓",  g: "linear-gradient(135deg,#F1F5F9,#E2E8F0)", b: "#94A3B8", t: "#475569" },
 ];
 
 // =============================================================================
@@ -64,9 +74,11 @@ function ExistingStepCard({ attachment, index, onRemove, onChange, removing }: {
   const inputRef = useRef<HTMLInputElement>(null);
   const [hovered, setHovered] = useState(false);
 
-  // Prioridade: preview da nova imagem selecionada → imagem salva no servidor
+  // Prioridade: preview da nova imagem selecionada → imagem salva no servidor.
+  // `attachment.file` pode ser null em passos só-com-descrição.
   const imgSrc = attachment.newPreview
-    ?? attachment.file.replace(/^https?:\/\/[^/]+/, "");
+    ?? attachment.file?.replace(/^https?:\/\/[^/]+/, "")
+    ?? "";
 
   const setImage = (file: File) => {
     const reader = new FileReader();
@@ -107,7 +119,7 @@ function ExistingStepCard({ attachment, index, onRemove, onChange, removing }: {
           {index + 1}
         </span>
         <span className="text-sm font-bold flex-1" style={{ color: "var(--col-body)" }}>
-          {attachment.title || `Passo ${index + 1}`}
+          Passo {index + 1}
         </span>
         <button type="button" onClick={() => onRemove(attachment.id)} disabled={removing}
           className="p-1.5 rounded-lg transition-all"
@@ -155,17 +167,25 @@ function ExistingStepCard({ attachment, index, onRemove, onChange, removing }: {
                 </button>
               </div>
             ) : (
-              // Sem imagem — drop zone para adicionar
-              <div className="rounded-xl p-7 text-center cursor-pointer transition-all"
+              // Sem imagem — drop zone para adicionar (mesmo visual do StepCard de criação)
+              <div
+                className="rounded-xl p-7 text-center cursor-pointer transition-all"
                 style={{ border: "2px dashed var(--glass-inner-border)", background: "var(--glass-field-bg)" }}
                 onClick={() => inputRef.current?.click()}
-                onDrop={onDrop} onDragOver={e => e.preventDefault()}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(59,130,246,0.4)"; e.currentTarget.style.background = "rgba(239,246,255,0.5)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--glass-inner-border)"; e.currentTarget.style.background = "var(--glass-field-bg)"; }}>
-                <ImagePlus className="h-5 w-5 mx-auto mb-2" style={{ color: "#3B82F6" }} />
+                onDrop={onDrop}
+                onDragOver={e => e.preventDefault()}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(59,130,246,0.4)"; e.currentTarget.style.background = "rgba(239,246,255,0.1)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--glass-inner-border)"; e.currentTarget.style.background = "var(--glass-field-bg)"; }}
+              >
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
+                  style={{ background: "linear-gradient(135deg,rgba(219,234,254,0.8),rgba(191,219,254,0.5))", color: "#3B82F6", border: "1px solid rgba(147,197,253,0.3)" }}>
+                  <ImagePlus className="h-5 w-5" />
+                </div>
                 <p className="text-sm font-medium" style={{ color: "var(--col-muted)" }}>
-                  Arraste ou <span className="font-bold" style={{ color: "#2563EB" }}>clique</span>
+                  Arraste imagens aqui ou{" "}
+                  <span className="font-bold" style={{ color: "#2563EB" }}>clique para selecionar</span>
                 </p>
+                <p className="text-xs mt-1.5" style={{ color: "var(--col-dim)" }}>PNG, JPG, GIF • até 5MB</p>
               </div>
             )}
             <input ref={inputRef} type="file" accept="image/*" className="hidden"
@@ -205,7 +225,7 @@ interface Props {
 // CaseEditForm — formulário de edição pré-preenchido com os dados do caso
 // =============================================================================
 export function CaseEditForm({ caso, onCancel, onSaved }: Props) {
-  const { tags, loading, submitting, update, removeAttachment, updateAttachment } = useEditCase(caso.id);
+  const { tags, users, loading, submitting, update, removeAttachment, updateAttachment } = useEditCase(caso.id);
 
   // Passos existentes — gerenciados localmente para remoção instantânea e edição local
   const [existingSteps, setExistingSteps] = useState<EditableAttachment[]>(
@@ -224,6 +244,8 @@ export function CaseEditForm({ caso, onCancel, onSaved }: Props) {
         case_id:         caso.case_id,
         title:           caso.title,
         status:          caso.status,
+        priority:        caso.priority      || "MEDIUM",
+        assigned_to:     caso.assigned_to   || "",
         module:          caso.module       || "",
         expected_result: caso.expected_result || "",
         observations:    caso.observations || "",
@@ -235,7 +257,14 @@ export function CaseEditForm({ caso, onCancel, onSaved }: Props) {
       },
     });
 
-  const cur = watch("status");
+  const cur     = watch("status");
+  const curPrio = watch("priority");
+
+  // Nome amigável do usuário para o <option> (cai pro email se sem first/last).
+  const userLabel = (u: { first_name: string; last_name: string; email: string }) => {
+    const full = `${u.first_name} ${u.last_name}`.trim();
+    return full || u.email;
+  };
 
   const addStep    = () => setNewSteps(s => [...s, { description: "" }]);
   const removeNew  = (i: number) => setNewSteps(s => s.filter((_, j) => j !== i));
@@ -261,9 +290,27 @@ export function CaseEditForm({ caso, onCancel, onSaved }: Props) {
 
   const onSubmit = async (data: FormData) => {
     try {
+      // Persiste alterações nos passos existentes (descrição e/ou nova imagem).
+      // Comparamos com o snapshot original (caso.attachments) para evitar PATCHs desnecessários.
+      const originalById = new Map(caso.attachments.map(a => [a.id, a]));
+      for (const att of existingSteps) {
+        const orig = originalById.get(att.id);
+        const descChanged = orig && orig.description !== att.description;
+        if (descChanged || att.newImage) {
+          await updateAttachment(att.id, att.description, att.newImage);
+        }
+      }
+
+      // assigned_to vazio → null (campo nullable no backend).
       await update(
-        { ...data, case_id: data.case_id.toUpperCase(), tag_ids: selectedTags },
+        {
+          ...data,
+          case_id: data.case_id.toUpperCase(),
+          assigned_to: data.assigned_to ? data.assigned_to : null,
+          tag_ids: selectedTags,
+        },
         newSteps,
+        existingSteps.length,
       );
       // Reconstrói o objeto TestCase atualizado para passar ao onSaved
       // (o componente pai vai fazer um novo GET para ter os dados frescos)
@@ -386,6 +433,43 @@ export function CaseEditForm({ caso, onCancel, onSaved }: Props) {
                     {opt.label}
                   </button>
                 ))}
+              </div>
+            </GlassCard>
+
+            {/* Prioridade — 4 botões em grid 2x2 */}
+            <GlassCard className="p-5">
+              <SLabel emoji="🚩">Prioridade</SLabel>
+              <div className="grid grid-cols-2 gap-2">
+                {PRIORITY_OPTS.map(opt => (
+                  <button key={opt.value} type="button"
+                    onClick={() => setValue("priority", opt.value)}
+                    className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl text-xs font-semibold transition-all"
+                    style={{
+                      background: curPrio === opt.value ? opt.g : "rgba(248,250,252,0.6)",
+                      color:      curPrio === opt.value ? opt.t : "#94A3B8",
+                      border:     curPrio === opt.value ? `1.5px solid ${opt.b}30` : "1.5px solid rgba(226,232,240,0.5)",
+                      transform:  curPrio === opt.value ? "scale(1.03)" : "scale(1)",
+                      boxShadow:  curPrio === opt.value ? `0 2px 8px ${opt.b}20` : "none",
+                    }}>
+                    <span className="text-lg">{opt.emoji}</span>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </GlassCard>
+
+            {/* Responsável — select; vazio = "Não atribuído" → null no backend */}
+            <GlassCard className="p-5">
+              <SLabel emoji="👤">Responsável</SLabel>
+              <div className="relative">
+                <select {...register("assigned_to")}
+                  className="glass-input w-full py-2.5 px-3.5 pr-8 rounded-xl text-sm appearance-none">
+                  <option value="">Não atribuído</option>
+                  {users.map(u => (
+                    <option key={u.id} value={u.id}>{userLabel(u)}</option>
+                  ))}
+                </select>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-xs" style={{ color: "#CBD5E1" }}>▾</span>
               </div>
             </GlassCard>
 

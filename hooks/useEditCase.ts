@@ -18,7 +18,7 @@ import { toast }               from "sonner";
 
 import { get, patch, del, upload, api } from "@/lib/api";
 import apiClient                        from "@/lib/api/client";
-import type { PendingStep }             from "./useCreateCase";
+import type { PendingStep, ApiUser }    from "./useCreateCase";
 
 interface ApiProject { id: string; name: string; }
 interface ApiTag     { id: string; name: string; color: string; }
@@ -27,10 +27,11 @@ interface DRFList<T> { results: T[]; }
 export interface UseEditCaseReturn {
   projects:         ApiProject[];
   tags:             ApiTag[];
-  loading:          boolean;  // carregando projetos/tags
+  users:            ApiUser[];
+  loading:          boolean;  // carregando projetos/tags/usuários
   submitting:       boolean;  // PATCH em andamento
   deleting:         boolean;  // DELETE em andamento
-  update:           (formData: Record<string, unknown>, newSteps: PendingStep[]) => Promise<void>;
+  update:           (formData: Record<string, unknown>, newSteps: PendingStep[], existingCount?: number) => Promise<void>;
   deleteCase:       () => Promise<void>;
   removeAttachment: (attachmentId: string) => Promise<void>;
   updateAttachment: (attachmentId: string, description: string, newImage?: File) => Promise<void>;
@@ -41,22 +42,25 @@ export function useEditCase(caseId: string): UseEditCaseReturn {
 
   const [projects,   setProjects]   = useState<ApiProject[]>([]);
   const [tags,       setTags]       = useState<ApiTag[]>([]);
+  const [users,      setUsers]      = useState<ApiUser[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [deleting,   setDeleting]   = useState(false);
 
-  // Carrega projetos e tags — necessários para os selects do formulário de edição
+  // Carrega projetos, tags e usuários — necessários para os selects do formulário de edição
   useEffect(() => {
     const load = async () => {
       try {
-        const [projResp, tagsResp] = await Promise.all([
+        const [projResp, tagsResp, usersResp] = await Promise.all([
           get<DRFList<ApiProject>>(api.endpoints.projects),
           get<DRFList<ApiTag>>(api.endpoints.tags),
+          get<DRFList<ApiUser>>(api.endpoints.users),
         ]);
         setProjects(projResp.data.results);
         setTags(tagsResp.data.results);
+        setUsers(usersResp.data.results);
       } catch {
-        toast.error("Erro ao carregar projetos e tags");
+        toast.error("Erro ao carregar dados do formulário");
       } finally {
         setLoading(false);
       }
@@ -73,19 +77,21 @@ export function useEditCase(caseId: string): UseEditCaseReturn {
   //
   // "newSteps" são os passos adicionados NESTA sessão de edição (não os existentes).
   // =============================================================================
-  const update = async (formData: Record<string, unknown>, newSteps: PendingStep[]) => {
+  const update = async (formData: Record<string, unknown>, newSteps: PendingStep[], existingCount = 0) => {
     setSubmitting(true);
     try {
       await patch(`${api.endpoints.testCases}${caseId}/`, formData);
 
-      // Envia somente os novos passos que têm imagem
+      // Envia todos os novos passos — a imagem é opcional.
+      // O título é numerado considerando os passos já existentes, pra evitar duplicatas (ex.: dois "Passo 1").
       const attachUrl = `${api.endpoints.testCases}${caseId}/add-attachment/`;
       for (let i = 0; i < newSteps.length; i++) {
         const step = newSteps[i];
-        if (!step.image) continue;
+        // Ignora passos completamente vazios (sem imagem E sem descrição)
+        if (!step.image && !step.description.trim()) continue;
         const fd = new FormData();
-        fd.append("file",        step.image);
-        fd.append("title",       `Passo ${i + 1}`);
+        if (step.image) fd.append("file", step.image);
+        fd.append("title",       `Passo ${existingCount + i + 1}`);
         fd.append("description", step.description);
         fd.append("order",       String(9000 + i)); // ordem alta: novos passos vêm depois dos existentes
         await upload(attachUrl, fd);
@@ -153,7 +159,9 @@ export function useEditCase(caseId: string): UseEditCaseReturn {
       await apiClient.patch(
         `${api.endpoints.testCases}${caseId}/update-attachment/${attachmentId}/`,
         fd,
-        // Axios detecta FormData e define Content-Type: multipart/form-data com boundary
+        // Sobrescreve o Content-Type padrão (application/json) da instância.
+        // Passando undefined, o Axios injeta multipart/form-data com o boundary correto.
+        { headers: { "Content-Type": undefined } },
       );
     } catch {
       toast.error("Erro ao salvar passo.");
@@ -161,5 +169,5 @@ export function useEditCase(caseId: string): UseEditCaseReturn {
     }
   };
 
-  return { projects, tags, loading, submitting, deleting, update, deleteCase, removeAttachment, updateAttachment };
+  return { projects, tags, users, loading, submitting, deleting, update, deleteCase, removeAttachment, updateAttachment };
 }
