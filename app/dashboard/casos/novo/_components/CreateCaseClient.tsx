@@ -12,13 +12,18 @@ import { useCreateCase, PendingStep } from "@/hooks/useCreateCase";
 // GlassCard, SLabel, FLabel, ErrMsg, Accordion agora vêm do arquivo compartilhado.
 // Antes estavam definidos aqui mesmo — duplicados no CaseDetailClient.
 import { GlassCard, SLabel, FLabel, ErrMsg, Accordion, CasePageBackground } from "@/app/dashboard/casos/_components/CaseShared";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 // ── Schema ────────────────────────────────────────────────────────────────────
+// assigned_to: aceita UUID (responsável escolhido) ou string vazia (sem responsável).
+// Convertemos "" → null no onSubmit, pois o backend espera null para "sem responsável".
 const schema = z.object({
   project:         z.string().uuid("Selecione um projeto"),
   case_id:         z.string().min(1, "Obrigatório").max(50),
   title:           z.string().min(1, "Obrigatório").max(255),
   status:          z.enum(["DRAFT", "ACTIVE", "DEPRECATED"]),
+  priority:        z.enum(["CRITICAL", "HIGH", "MEDIUM", "LOW"]),
+  assigned_to:     z.string().optional(),
   module:          z.string().max(100).optional(),
   expected_result: z.string().optional(),
   observations:    z.string().optional(),
@@ -36,25 +41,51 @@ const STATUS_OPTS = [
   { value: "DEPRECATED"  as const, label: "Depreciado", emoji: "📦", g: "linear-gradient(135deg,#FEE2E2,#FECACA)", b: "#EF4444", t: "#991B1B" },
 ];
 
+// Opções de prioridade — cores alinhadas com o KanbanCard (mesma paleta visual)
+const PRIORITY_OPTS = [
+  { value: "CRITICAL" as const, label: "Crítica", emoji: "🔥", g: "linear-gradient(135deg,#FEE2E2,#FECACA)", b: "#DC2626", t: "#991B1B" },
+  { value: "HIGH"     as const, label: "Alta",    emoji: "⚡", g: "linear-gradient(135deg,#FFEDD5,#FED7AA)", b: "#EA580C", t: "#9A3412" },
+  { value: "MEDIUM"   as const, label: "Média",   emoji: "●",  g: "linear-gradient(135deg,#DBEAFE,#BFDBFE)", b: "#2563EB", t: "#1D4ED8" },
+  { value: "LOW"      as const, label: "Baixa",   emoji: "↓",  g: "linear-gradient(135deg,#F1F5F9,#E2E8F0)", b: "#94A3B8", t: "#475569" },
+];
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 export function CreateCaseClient() {
   const router = useRouter();
-  const { projects, tags, loading, submitting, submit } = useCreateCase();
+  const { projects, tags, users, loading, submitting, submit } = useCreateCase();
 
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [steps, setSteps]               = useState<PendingStep[]>([{ description: "" }]);
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } =
-    useForm<FormData>({ resolver: zodResolver(schema), defaultValues: { status: "DRAFT" } });
+    useForm<FormData>({
+      resolver: zodResolver(schema),
+      defaultValues: { status: "DRAFT", priority: "MEDIUM", assigned_to: "", project: "" },
+    });
 
-  const cur = watch("status");
+  const cur         = watch("status");
+  const curPrio     = watch("priority");
+  const curProject  = watch("project");
+  const curAssigned = watch("assigned_to");
 
   const addStep    = () => setSteps(s => [...s, { description: "" }]);
   const removeStep = (i: number) => setSteps(s => s.filter((_, j) => j !== i));
   const updateStep = (i: number, step: PendingStep) => setSteps(s => s.map((v, j) => j === i ? step : v));
   const toggleTag  = (id: string) => setSelectedTags(t => t.includes(id) ? t.filter(x => x !== id) : [...t, id]);
+  // assigned_to vazio → null para o backend (campo nullable no model TestCase).
   const onSubmit   = (data: FormData) =>
-    submit({ ...data, case_id: data.case_id.toUpperCase(), tag_ids: selectedTags }, steps);
+    submit({
+      ...data,
+      case_id: data.case_id.toUpperCase(),
+      assigned_to: data.assigned_to ? data.assigned_to : null,
+      tag_ids: selectedTags,
+    }, steps);
+
+  // Helper: nome do usuário para exibir no <option> (cai pro email se sem nome).
+  const userLabel = (u: { first_name: string; last_name: string; email: string }) => {
+    const full = `${u.first_name} ${u.last_name}`.trim();
+    return full || u.email;
+  };
 
   if (loading) return (
     <div className="flex items-center justify-center py-20">
@@ -129,14 +160,17 @@ export function CreateCaseClient() {
               <SLabel emoji="🗂️">Classificação</SLabel>
               <div>
                 <FLabel required>Projeto</FLabel>
-                <div className="relative">
-                  <select {...register("project")}
-                    className="glass-input w-full py-2.5 px-3.5 pr-8 rounded-xl text-sm appearance-none">
-                    <option value="">Selecione...</option>
-                    {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-xs" style={{ color: "#CBD5E1" }}>▾</span>
-                </div>
+                <Select
+                  value={curProject || ""}
+                  onValueChange={(v) => setValue("project", v, { shouldValidate: true })}
+                >
+                  <SelectTrigger className="w-full" placeholder="Selecione..." />
+                  <SelectContent>
+                    {projects.map(p => (
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <ErrMsg msg={errors.project?.message} />
               </div>
               <div>
@@ -166,6 +200,47 @@ export function CreateCaseClient() {
                   </button>
                 ))}
               </div>
+            </GlassCard>
+
+            {/* Prioridade — 4 botões em grid 2x2, mesmo padrão visual de Status */}
+            <GlassCard className="p-5">
+              <SLabel emoji="🚩">Prioridade</SLabel>
+              <div className="grid grid-cols-2 gap-2">
+                {PRIORITY_OPTS.map(opt => (
+                  <button key={opt.value} type="button"
+                    onClick={() => setValue("priority", opt.value)}
+                    className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl text-xs font-semibold transition-all"
+                    style={{
+                      background: curPrio === opt.value ? opt.g : "rgba(248,250,252,0.6)",
+                      color:      curPrio === opt.value ? opt.t : "#94A3B8",
+                      border:     curPrio === opt.value ? `1.5px solid ${opt.b}30` : "1.5px solid rgba(226,232,240,0.5)",
+                      transform:  curPrio === opt.value ? "scale(1.03)" : "scale(1)",
+                      boxShadow:  curPrio === opt.value ? `0 2px 8px ${opt.b}20` : "none",
+                    }}>
+                    <span className="text-lg">{opt.emoji}</span>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </GlassCard>
+
+            {/* Responsável — vazio = sem responsável (null no backend).
+                Radix Select não aceita value="", então usamos "__none__" como
+                sentinel e convertemos no onValueChange. */}
+            <GlassCard className="p-5">
+              <SLabel emoji="👤">Responsável</SLabel>
+              <Select
+                value={curAssigned || "__none__"}
+                onValueChange={(v) => setValue("assigned_to", v === "__none__" ? "" : v)}
+              >
+                <SelectTrigger className="w-full" />
+                <SelectContent>
+                  <SelectItem value="__none__">Não atribuído</SelectItem>
+                  {users.map(u => (
+                    <SelectItem key={u.id} value={u.id}>{userLabel(u)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </GlassCard>
 
             {/* Tags */}
