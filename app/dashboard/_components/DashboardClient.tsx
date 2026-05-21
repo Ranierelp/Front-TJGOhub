@@ -37,7 +37,7 @@ import { FolderOpen, X } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useProjects }      from "@/hooks/useProjects";
 import { Spinner }          from "@/components/ui/spinner";
-import { Select }           from "@/components/ui/select";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { LastRunCard }      from "./LastRunCard";
 import { PassRateCard }     from "./PassRateCard";
 import { TopFailuresCard }  from "./TopFailuresCard";
@@ -81,17 +81,21 @@ export function DashboardClient() {
           Paralelo Django: <select name="projeto"> com selected dinâmico.
         */}
         <Select
-          value={projectId}
-          onChange={(e) => setProjectId(e.target.value)}
+          value={projectId || "__all__"}
+          onValueChange={(v) => setProjectId(v === "__all__" ? "" : v)}
           disabled={projectsLoading}
-          containerClassName="w-auto min-w-48"
         >
-          <option value="">Todos os projetos</option>
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
+          <SelectTrigger className="w-auto min-w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all__">Todos os projetos</SelectItem>
+            {projects.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
 
         {/* Botão "Limpar filtro" — aparece somente quando há projeto selecionado */}

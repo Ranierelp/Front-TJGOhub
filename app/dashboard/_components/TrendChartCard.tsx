@@ -28,7 +28,7 @@
 
 import { useRef, useEffect } from "react";
 import Chart from "chart.js/auto";
-import { Select } from "@/components/ui/select";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 // Paleta — fora do componente para não recriar a cada render
 const COLORS = {
@@ -182,10 +182,15 @@ export function TrendChartCard({ data }: TrendChartCardProps) {
         </div>
 
         {/* Select estático — no Passo 7 controlará o período via useState */}
-        <Select containerClassName="w-auto" className="h-auto py-1.5 text-xs">
-          <option>Últimos 7 dias</option>
-          <option>Últimos 14 dias</option>
-          <option>Últimos 30 dias</option>
+        <Select defaultValue="7">
+          <SelectTrigger className="w-auto h-auto py-1.5 text-xs gap-2">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="7">Últimos 7 dias</SelectItem>
+            <SelectItem value="14">Últimos 14 dias</SelectItem>
+            <SelectItem value="30">Últimos 30 dias</SelectItem>
+          </SelectContent>
         </Select>
       </div>
 
