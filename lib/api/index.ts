@@ -39,6 +39,7 @@ export const api = {
     tokenRefresh: "/api/v1/user/token/refresh/",
     register: "/api/v1/user/register/",
     me: "/api/v1/user/user/me/",
+    users: "/api/v1/user/user/",
     logout: "/api/v1/user/logout/",
 
     // Recursos principais
