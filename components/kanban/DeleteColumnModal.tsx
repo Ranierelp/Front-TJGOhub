@@ -5,7 +5,7 @@ import { AlertTriangle } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Select } from "@/components/ui/select";
+import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select";
 import type { KanbanBoardColumn } from "@/lib/types/kanban";
 
 interface Props {
@@ -52,15 +52,15 @@ export function DeleteColumnModal({ open, column, otherColumns, onClose, onConfi
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Mover casos para
             </label>
-            <Select
-              value={targetId}
-              onChange={(e) => setTargetId(e.target.value)}
-            >
-              {otherColumns.map((col) => (
-                <option key={col.id} value={col.id}>
-                  {col.name} ({col.cases_count} casos)
-                </option>
-              ))}
+            <Select value={targetId} onValueChange={setTargetId}>
+              <SelectTrigger placeholder="Selecione uma coluna" className="w-full" />
+              <SelectContent>
+                {otherColumns.map((col) => (
+                  <SelectItem key={col.id} value={col.id}>
+                    {col.name} ({col.cases_count} casos)
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
         </div>

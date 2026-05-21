@@ -2,7 +2,7 @@
 
 import { Search, Filter, X } from "lucide-react";
 import type { Project } from "@/hooks/useProjects";
-import { Select } from "@/components/ui/select";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 export type PriorityFilter = "all" | "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
 
@@ -40,46 +40,27 @@ export function KanbanToolbar({
   assignees,
 }: Props) {
 
-  const cycleAssignee = () => {
-    const order = ["all", ...assignees.map(a => a.id)];
-    const idx   = order.indexOf(filterAssignee);
-    onAssigneeChange(order[(idx + 1) % order.length]);
-  };
-
-  const assigneeLabel =
-    filterAssignee === "all"
-      ? "Todos"
-      : (assignees.find(a => a.id === filterAssignee)?.name.split(" ")[0] ?? "?");
-
   const allCount = Object.values(projectCounts).reduce((s, n) => s + n, 0);
-
-  // Chip de filtro (prioridade / responsável)
-  const chipCls = (active: boolean) =>
-    `inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-2.5 py-[7px] text-xs font-semibold transition-colors ${
-      active
-        ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-400"
-        : "border-border bg-card text-muted-foreground hover:bg-muted"
-    }`;
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2.5">
 
       {/* Project select */}
-      <Select
-        value={activeProjectId}
-        onChange={e => onProjectChange(e.target.value)}
-        containerClassName="w-auto"
-        className="h-auto py-[7px] text-xs font-semibold"
-      >
-        <option value="">Todos{allCount > 0 ? ` (${allCount})` : ""}</option>
-        {projects.map(p => {
-          const count = projectCounts[p.id] ?? 0;
-          return (
-            <option key={p.id} value={p.id}>
-              {p.name}{count > 0 ? ` (${count})` : ""}
-            </option>
-          );
-        })}
+      <Select value={activeProjectId || "__all__"} onValueChange={v => onProjectChange(v === "__all__" ? "" : v)}>
+        <SelectTrigger className="w-auto h-auto py-[7px] text-xs font-semibold gap-2">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="__all__">Todos{allCount > 0 ? ` (${allCount})` : ""}</SelectItem>
+          {projects.map(p => {
+            const count = projectCounts[p.id] ?? 0;
+            return (
+              <SelectItem key={p.id} value={p.id}>
+                {p.name}{count > 0 ? ` (${count})` : ""}
+              </SelectItem>
+            );
+          })}
+        </SelectContent>
       </Select>
 
       {/* Search */}
@@ -99,21 +80,29 @@ export function KanbanToolbar({
       </div>
 
       {/* Chips */}
-      <Select
-        value={filterPriority}
-        onChange={e => onPriorityChange(e.target.value as PriorityFilter)}
-        containerClassName="w-auto"
-        className="h-auto py-[7px] text-xs font-semibold"
-      >
-        {PRIORITY_OPTIONS.map(p => (
-          <option key={p} value={p}>{p === "all" ? "Prioridade: Todas" : `Prioridade: ${PRIORITY_LABELS[p]}`}</option>
-        ))}
+      <Select value={filterPriority} onValueChange={v => onPriorityChange(v as PriorityFilter)}>
+        <SelectTrigger className="w-auto h-auto py-[7px] text-xs font-semibold gap-2">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {PRIORITY_OPTIONS.map(p => (
+            <SelectItem key={p} value={p}>{p === "all" ? "Prioridade: Todas" : `Prioridade: ${PRIORITY_LABELS[p]}`}</SelectItem>
+          ))}
+        </SelectContent>
       </Select>
 
-      <button type="button" onClick={cycleAssignee} className={chipCls(filterAssignee !== "all")}>
-        <span className="font-medium opacity-70">Responsável:</span>
-        {assigneeLabel}
-      </button>
+      {/* Responsável */}
+      <Select value={filterAssignee} onValueChange={onAssigneeChange}>
+        <SelectTrigger className="w-auto h-auto py-[7px] text-xs font-semibold gap-2">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Responsável: Todos</SelectItem>
+          {assignees.map(a => (
+            <SelectItem key={a.id} value={a.id}>Responsável: {a.name}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       <button type="button" className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-[7px] text-xs font-semibold text-muted-foreground hover:bg-muted">
         <Filter className="h-3.5 w-3.5" />
