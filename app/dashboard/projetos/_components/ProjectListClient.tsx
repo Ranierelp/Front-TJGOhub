@@ -79,7 +79,12 @@ export function ProjectListClient() {
       toast.success("Projeto excluído permanentemente");
       setDeleteTarget(null);
       refetch();
-    } catch { toast.error("Erro ao excluir projeto"); }
+    } catch (err: any) {
+      // 409 → backend bloqueou a exclusão (ex: projeto com casos vinculados).
+      // Usa a mensagem específica do backend em vez do toast genérico.
+      const detail = err?.details?.detail;
+      toast.error(detail || "Erro ao excluir projeto");
+    }
   }
 
   return (
