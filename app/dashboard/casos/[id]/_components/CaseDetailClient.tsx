@@ -68,7 +68,7 @@ export function CaseDetailClient({ id }: { id: string }) {
     try {
       await del(`${api.endpoints.testCases}${id}/`);
       toast.success("Caso de teste excluído.");
-      router.push("/dashboard/casos/");
+      router.push("/dashboard/casos/board");
     } catch {
       toast.error("Erro ao excluir caso de teste.");
     } finally {

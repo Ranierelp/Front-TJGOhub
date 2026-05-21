@@ -21,6 +21,7 @@ import { useRouter }                                 from "next/navigation";
 import { ArrowLeft, Pencil, Trash2, User as UserIcon } from "lucide-react";
 
 import { CasePageBackground } from "@/app/dashboard/casos/_components/CaseShared";
+import { SimpleDeleteModal }  from "@/app/dashboard/projetos/_components/ProjectModals";
 import { CaseStepperSidebar } from "./stepper/CaseStepperSidebar";
 import { CaseStepPanel }      from "./stepper/CaseStepPanel";
 import { CaseMetaSidebar }    from "./stepper/CaseMetaSidebar";
@@ -121,8 +122,10 @@ export function CaseViewMode({ caso, onEdit, onDelete, deleting }: Props) {
   const [activeStep, setActiveStep] = useState(0);
   const currentStep = steps[activeStep] ?? null;
 
-  const handleDelete = async () => {
-    if (!window.confirm(`Excluir o caso "${caso.case_id} - ${caso.title}"? Esta ação não pode ser desfeita.`)) return;
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const handleConfirmDelete = async () => {
+    setConfirmDelete(false);
     await onDelete();
   };
 
@@ -196,7 +199,7 @@ export function CaseViewMode({ caso, onEdit, onDelete, deleting }: Props) {
 
           {/* Ações */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <button type="button" onClick={handleDelete} disabled={deleting}
+            <button type="button" onClick={() => setConfirmDelete(true)} disabled={deleting}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
               style={{ color: "#DC2626", background: "rgba(254,226,226,0.4)", border: "1px solid rgba(252,165,165,0.4)" }}
               onMouseEnter={e => { e.currentTarget.style.background = "rgba(254,226,226,0.8)"; }}
@@ -271,6 +274,15 @@ export function CaseViewMode({ caso, onEdit, onDelete, deleting }: Props) {
 
         <CaseMetaSidebar caso={caso} />
       </div>
+
+      {confirmDelete && (
+        <SimpleDeleteModal
+          title="Excluir Caso de Teste?"
+          description={`${caso.case_id} — ${caso.title}`}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setConfirmDelete(false)}
+        />
+      )}
     </div>
   );
 }
