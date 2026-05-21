@@ -1,7 +1,13 @@
 "use client";
 
-import { Draggable } from "@hello-pangea/dnd";
+import { useRef }      from "react";
+import { useRouter }   from "next/navigation";
+import { Draggable }   from "@hello-pangea/dnd";
 import type { KanbanCard as KanbanCardType } from "@/lib/types/kanban";
+
+// Distância mínima (px) entre mousedown e mouseup para considerar que houve drag.
+// Movimentos abaixo desse limite são tratados como clique e navegam para o caso.
+const DRAG_THRESHOLD_PX = 5;
 
 // Cor da barra lateral de prioridade (funciona em ambos os temas)
 const PRIORITY_BAR: Record<string, string> = {
@@ -41,8 +47,14 @@ interface Props {
 }
 
 export function KanbanCard({ card, index }: Props) {
+  const router = useRouter();
   const bar    = PRIORITY_BAR[card.priority] ?? "#94a3b8";
   const status = STATUS_CONFIG[card.status]  ?? STATUS_CONFIG.DRAFT;
+
+  // Detecção clique vs drag — @hello-pangea/dnd dispara onClick mesmo após drag.
+  // Guardamos a posição inicial do mousedown e marcamos `wasDragged` se passar do limiar.
+  const mouseDownPos = useRef<{ x: number; y: number } | null>(null);
+  const wasDragged   = useRef(false);
 
   return (
     <Draggable draggableId={card.id} index={index}>
@@ -51,9 +63,27 @@ export function KanbanCard({ card, index }: Props) {
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
+          onMouseDown={e => {
+            mouseDownPos.current = { x: e.clientX, y: e.clientY };
+            wasDragged.current   = false;
+          }}
+          onMouseMove={e => {
+            if (!mouseDownPos.current) return;
+            const dx = Math.abs(e.clientX - mouseDownPos.current.x);
+            const dy = Math.abs(e.clientY - mouseDownPos.current.y);
+            if (dx > DRAG_THRESHOLD_PX || dy > DRAG_THRESHOLD_PX) wasDragged.current = true;
+          }}
+          onClick={() => {
+            // Não navega durante o drag — o snapshot.isDragging continua true até o drop.
+            if (!wasDragged.current && !snapshot.isDragging) {
+              router.push(`/dashboard/casos/${card.id}`);
+            }
+          }}
           className={[
             "relative overflow-hidden rounded-[10px] border border-border bg-card pl-[14px] pr-3.5 py-3",
-            "cursor-grab select-none transition-all duration-150",
+            "select-none transition-all duration-150",
+            // cursor: grab durante drag, pointer (link) quando parado
+            snapshot.isDragging ? "cursor-grabbing" : "cursor-pointer",
             snapshot.isDragging
               ? "shadow-[0_4px_16px_rgba(15,23,42,0.18)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.5)] rotate-[1deg]"
               : "shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)]",
