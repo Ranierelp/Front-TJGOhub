@@ -38,9 +38,7 @@ export default async function CasoDetalhePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      <CaseDetailClient id={id} />
-    </div>
-  );
+  // Sem wrapper de largura: a CaseViewMode foi desenhada pra ocupar a tela toda
+  // (header full-width, grid 3-col se tocando pelas bordas).
+  return <CaseDetailClient id={id} />;
 }

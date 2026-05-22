@@ -1,17 +1,16 @@
 "use client";
 
 // =============================================================================
-// CaseStepperSidebar — coluna esquerda do CaseViewMode (layout stepper)
+// CaseStepperSidebar — coluna esquerda do CaseViewMode
 //
-// Lista os passos (attachments) numerados verticalmente. Marca:
-//   • passo ATIVO  → círculo azul gradiente com ring
-//   • passos PASSADOS → círculo verde com ✓
-//   • passos FUTUROS  → círculo com borda neutra (var(--glass-inner-border))
+// Lista vertical dos passos com 3 estados visuais:
+//   • ATIVO     → círculo brand-solid preenchido + halo brand-glow
+//   • CONCLUÍDO → círculo success com check
+//   • FUTURO    → círculo branco com borda neutra
 //
-// Visual segue a paleta do projeto (CSS vars / var(--col-*) / var(--glass-*)).
+// Linha vertical contínua atrás dos círculos liga visualmente os passos.
 // =============================================================================
 
-import { Check } from "lucide-react";
 import type { Attachment } from "../CaseViewMode";
 
 interface Props {
@@ -23,22 +22,26 @@ interface Props {
 export function CaseStepperSidebar({ steps, activeStep, onSelect }: Props) {
   return (
     <aside
-      className="rounded-2xl p-4 self-start sticky top-4"
+      className="overflow-auto py-[18px] pl-[18px] pr-3.5"
       style={{
-        background:           "var(--glass-card-bg)",
-        backdropFilter:       "blur(24px)",
-        WebkitBackdropFilter: "blur(24px)",
-        border:               "1px solid var(--glass-card-border)",
-        boxShadow:            "var(--glass-shadow)",
+        background:  "var(--glass-card-bg)",
+        borderRight: "1px solid var(--glass-card-border)",
       }}
     >
-      <div className="mb-3 px-2">
-        <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "#3B82F6" }}>
-          Passos do Teste
-        </p>
-        <p className="text-xs mt-0.5" style={{ color: "var(--col-dim)" }}>
-          {steps.length} {steps.length === 1 ? "passo" : "passos"}
-        </p>
+      {/* Header da sidebar — label + contagem */}
+      <div className="mb-3 flex items-center justify-between">
+        <span
+          className="text-[11px] font-extrabold uppercase tracking-wider"
+          style={{ color: "var(--col-heading)" }}
+        >
+          Passos
+        </span>
+        <span
+          className="rounded px-1.5 py-[1px] font-mono text-[10px] font-bold"
+          style={{ background: "var(--brand-bg)", color: "var(--brand-fg)" }}
+        >
+          {steps.length}
+        </span>
       </div>
 
       {steps.length === 0 ? (
@@ -46,58 +49,71 @@ export function CaseStepperSidebar({ steps, activeStep, onSelect }: Props) {
           Nenhum passo cadastrado.
         </p>
       ) : (
-        <ul className="space-y-1">
+        <div className="relative">
+          {/* Linha vertical contínua — alinhada ao centro dos círculos.
+              Cálculo: button.p-2 (8px) + half-circle (14px) - half-line (1px) = 21px da esquerda.
+              Vertical: começa no centro do 1º círculo (top 22px) e termina no centro do último (bottom 26px). */}
+          <div
+            className="absolute left-[21px] top-[22px] bottom-[26px] w-[2px]"
+            style={{ background: "var(--col-divider)" }}
+            aria-hidden
+          />
+
           {steps.map((step, i) => {
-            const isActive = i === activeStep;
-            const isDone   = i <  activeStep;
+            const active = i === activeStep;
+            const done   = i <  activeStep;
 
             return (
-              <li key={step.id}>
-                <button
-                  type="button"
-                  onClick={() => onSelect(i)}
-                  className="w-full flex items-center gap-3 px-2 py-2 rounded-xl text-left transition-all"
+              <button
+                key={step.id}
+                type="button"
+                onClick={() => onSelect(i)}
+                className={`relative flex w-full items-start gap-2.5 rounded-md p-2 pb-3 text-left transition-colors ${
+                  active ? "" : "hover:bg-slate-50"
+                }`}
+              >
+                {/* Círculo do número — z-1 fica sobre a linha */}
+                <span
+                  className="relative z-[1] inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border-2 font-mono text-[11px] font-extrabold transition-all"
                   style={{
-                    background: isActive
-                      ? "linear-gradient(135deg,rgba(219,234,254,0.5),rgba(239,246,255,0.3))"
-                      : "transparent",
+                    background: active
+                      ? "var(--brand-solid)"
+                      : done
+                        ? "var(--success-bg)"
+                        : "var(--glass-card-bg)",
+                    color: active
+                      ? "#fff"
+                      : done
+                        ? "var(--success-fg)"
+                        : "var(--col-dim)",
+                    borderColor: active
+                      ? "var(--brand-solid)"
+                      : done
+                        ? "var(--success-border)"
+                        : "var(--col-divider)",
+                    boxShadow: active ? "0 0 0 4px var(--brand-glow)" : "none",
                   }}
-                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "rgba(241,245,249,0.5)"; }}
-                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
                 >
-                  {/* Círculo numerado / done / future */}
-                  <span
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                    style={
-                      isActive
-                        ? {
-                            background: "linear-gradient(135deg,#2563EB,#3B82F6)",
-                            color:      "#FFFFFF",
-                            boxShadow:  "0 0 0 4px rgba(219,234,254,0.8)",
-                          }
-                        : isDone
-                        ? { background: "#10B981", color: "#FFFFFF" }
-                        : {
-                            background: "var(--glass-field-bg)",
-                            color:      "var(--col-dim)",
-                            border:     "1px solid var(--glass-inner-border)",
-                          }
-                    }
-                  >
-                    {isDone ? <Check className="h-3.5 w-3.5" /> : i + 1}
-                  </span>
+                  {done ? "✓" : i + 1}
+                </span>
 
-                  <span
-                    className="text-xs font-semibold flex-1 truncate"
-                    style={{ color: isActive ? "var(--col-body)" : "var(--col-muted)" }}
+                {/* Título do passo */}
+                <div className="min-w-0 flex-1 pt-1">
+                  <div
+                    className={`text-[12px] leading-snug [text-wrap:pretty] ${
+                      active ? "font-bold" : "font-semibold"
+                    }`}
+                    style={{
+                      color: active ? "var(--col-heading)" : "var(--col-muted)",
+                    }}
                   >
                     {step.title || `Passo ${i + 1}`}
-                  </span>
-                </button>
-              </li>
+                  </div>
+                </div>
+              </button>
             );
           })}
-        </ul>
+        </div>
       )}
     </aside>
   );

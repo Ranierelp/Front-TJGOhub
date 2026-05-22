@@ -118,13 +118,17 @@ export function CaseDetailClient({ id }: { id: string }) {
 
   // ── Renderização condicional: view ↔ edit ────────────────────────────────────
 
+  // Edit mode mantém o container limitado/centralizado (formulário fica melhor
+  // assim). View mode ocupa a tela toda — layout stepper foi desenhado pra isso.
   if (isEditing) {
     return (
-      <CaseEditForm
-        caso={caso}
-        onCancel={() => setIsEditing(false)}
-        onSaved={handleSaved}
-      />
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <CaseEditForm
+          caso={caso}
+          onCancel={() => setIsEditing(false)}
+          onSaved={handleSaved}
+        />
+      </div>
     );
   }
 

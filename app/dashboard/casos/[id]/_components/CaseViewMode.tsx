@@ -1,33 +1,34 @@
 "use client";
 
 // =============================================================================
-// CaseViewMode — layout stepper (3 colunas) para visualização do caso de teste
+// CaseViewMode — visualização do caso de teste (layout stepper 3 colunas)
 //
 // Estrutura:
-//   ┌──────────────────────────────────────────────────────────────────────┐
-//   │ HEADER (breadcrumb, status, prioridade, título, ações, tags)         │
-//   ├────────────┬──────────────────────────────────────────┬──────────────┤
-//   │ Stepper    │ Step Panel                               │ Meta Sidebar │
-//   │ (passos)   │ (imagem + ação + resultado esperado)     │ (contexto)   │
-//   └────────────┴──────────────────────────────────────────┴──────────────┘
+//   ┌────────────────────────────────────────────────────────────────────────┐
+//   │ HEADER (breadcrumb fino + ID/status/prioridade/título/responsável/data│
+//   │         + Excluir + Editar)                                            │
+//   ├────────────────────────────────────────────────────────────────────────┤
+//   │ TAGS ROW (label "TAGS" + chips mono uppercase)                         │
+//   ├──────────┬────────────────────────────────────────┬────────────────────┤
+//   │ 260px    │ flex-1                                  │ 300px              │
+//   │ Stepper  │ Passo ativo (progresso + ação + esp.)  │ Metadados          │
+//   └──────────┴────────────────────────────────────────┴────────────────────┘
 //
-// O modo de edição NÃO é afetado — fica em CaseEditForm. Aqui é só leitura.
-// Interfaces TestCase/Attachment/Priority continuam exportadas daqui pois
-// outros arquivos (CaseDetailClient, CaseEditForm) importam delas.
+// Mantém as interfaces TestCase/Attachment/Priority exportadas (outros arquivos
+// importam delas). O modo de edição NÃO é afetado — fica no CaseEditForm.
 // =============================================================================
 
 import { useState }                                  from "react";
 import { useRouter }                                 from "next/navigation";
-import { ArrowLeft, Pencil, Trash2, User as UserIcon } from "lucide-react";
+import { Pencil, Trash2 }                            from "lucide-react";
 
-import { CasePageBackground } from "@/app/dashboard/casos/_components/CaseShared";
 import { SimpleDeleteModal }  from "@/app/dashboard/projetos/_components/ProjectModals";
 import { CaseStepperSidebar } from "./stepper/CaseStepperSidebar";
 import { CaseStepPanel }      from "./stepper/CaseStepPanel";
 import { CaseMetaSidebar }    from "./stepper/CaseMetaSidebar";
 
 // =============================================================================
-// Interfaces — espelham o TestCaseSerializer do backend (consumidas em vários arquivos)
+// Interfaces — espelham o TestCaseSerializer do backend
 // =============================================================================
 
 export interface Attachment {
@@ -35,7 +36,7 @@ export interface Attachment {
   title:           string;
   description:     string;
   attachment_type: "IMAGE" | "DOCUMENT" | "OTHER";
-  file:            string | null; // null em passos só-com-descrição
+  file:            string | null;
   order:           number;
 }
 
@@ -68,40 +69,58 @@ export interface TestCase {
 }
 
 // =============================================================================
-// Tabelas de estilo (status + prioridade) — paleta alinhada ao restante do app
+// Helpers
 // =============================================================================
-const STATUS_STYLES: Record<TestCase["status"], { label: string; bg: string; color: string; dot: string }> = {
-  DRAFT:      { label: "Rascunho",  bg: "rgba(254,243,199,0.6)", color: "#92400E", dot: "#F59E0B" },
-  ACTIVE:     { label: "Ativo",      bg: "rgba(209,250,229,0.6)", color: "#065F46", dot: "#10B981" },
-  DEPRECATED: { label: "Depreciado", bg: "rgba(254,226,226,0.6)", color: "#991B1B", dot: "#EF4444" },
+
+// Status: dot + label compatíveis com as 3 opções do backend
+const STATUS_META: Record<TestCase["status"], { label: string; dot: string; bg: string; fg: string }> = {
+  ACTIVE:     { label: "Ativo",      dot: "#10B981", bg: "var(--success-bg)", fg: "var(--success-fg)" },
+  DRAFT:      { label: "Rascunho",   dot: "#F59E0B", bg: "rgba(245,158,11,0.12)", fg: "#92400E" },
+  DEPRECATED: { label: "Depreciado", dot: "#EF4444", bg: "rgba(239,68,68,0.12)",  fg: "#991B1B" },
 };
 
-const PRIORITY_STYLES: Record<Priority, { label: string; bg: string; color: string; dot: string }> = {
-  CRITICAL: { label: "Crítica", bg: "rgba(254,226,226,0.5)", color: "#991B1B", dot: "#DC2626" },
-  HIGH:     { label: "Alta",    bg: "rgba(255,237,213,0.5)", color: "#9A3412", dot: "#EA580C" },
-  MEDIUM:   { label: "Média",   bg: "rgba(219,234,254,0.5)", color: "#1D4ED8", dot: "#2563EB" },
-  LOW:      { label: "Baixa",   bg: "rgba(241,245,249,0.7)", color: "#475569", dot: "#94A3B8" },
+const PRIORITY_LABELS: Record<Priority, string> = {
+  CRITICAL: "Crítica",
+  HIGH:     "Alta",
+  MEDIUM:   "Média",
+  LOW:      "Baixa",
 };
 
-// Hash determinístico → cor do pill do módulo (consistente entre sessões)
-function moduleHue(text: string): number {
+// Hash determinístico nome → cor para o módulo (consistente entre sessões)
+function moduleColor(text: string): string {
   let h = 0;
   for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) >>> 0;
-  return h % 360;
+  return `hsl(${h % 360} 65% 45%)`;
 }
 
-// Data ISO → "dd/MM/yyyy HH:mm"
+// Hash determinístico para a cor do avatar (igual ao do módulo, paleta diferente)
+function avatarColor(text: string): string {
+  let h = 0;
+  for (let i = 0; i < text.length; i++) h = (h * 17 + text.charCodeAt(i)) >>> 0;
+  return `hsl(${h % 360} 55% 40%)`;
+}
+
+// "Raniere Luiz Pereira Neto" → "RP" (primeira + última inicial)
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+// Data ISO → "13 mai 2026, 09:42"
 function formatDateBR(iso: string): string {
   try {
     const d = new Date(iso);
-    return d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+            .replace(".", "");
   } catch {
     return iso;
   }
 }
 
 // =============================================================================
-// Props
+// Component
 // =============================================================================
 interface Props {
   caso:     TestCase;
@@ -110,151 +129,197 @@ interface Props {
   deleting: boolean;
 }
 
-// =============================================================================
-// CaseViewMode
-// =============================================================================
 export function CaseViewMode({ caso, onEdit, onDelete, deleting }: Props) {
   const router = useRouter();
 
-  // Passos ordenados (cópia para não mutar o array original do caso)
-  const steps = [...caso.attachments].sort((a, b) => a.order - b.order);
-
+  const steps        = [...caso.attachments].sort((a, b) => a.order - b.order);
   const [activeStep, setActiveStep] = useState(0);
-  const currentStep = steps[activeStep] ?? null;
+  const currentStep  = steps[activeStep] ?? null;
 
   const [confirmDelete, setConfirmDelete] = useState(false);
-
   const handleConfirmDelete = async () => {
     setConfirmDelete(false);
     await onDelete();
   };
 
-  const statusStyle = STATUS_STYLES[caso.status];
-  const prioStyle   = PRIORITY_STYLES[caso.priority] ?? PRIORITY_STYLES.MEDIUM;
-  const modHue      = caso.module ? moduleHue(caso.module) : null;
+  const status      = STATUS_META[caso.status];
+  const modColor    = caso.module ? moduleColor(caso.module) : null;
+  const responsavel = caso.assigned_to_name || "";
 
   return (
-    <div className="flex flex-col gap-5" style={{ fontFamily: "'DM Sans',system-ui,sans-serif" }}>
-      <CasePageBackground />
+    <div
+      className="flex h-full min-h-0 flex-col overflow-hidden"
+      style={{ background: "var(--page-bg)", color: "var(--col-heading)", fontFamily: "'DM Sans',system-ui,sans-serif" }}
+    >
+      {/* ===================== HEADER ===================== */}
+      <header
+        className="px-8 pb-4 pt-[18px]"
+        style={{ background: "var(--glass-card-bg)", borderBottom: "1px solid var(--glass-card-border)" }}
+      >
+        {/* Breadcrumb */}
+        <div className="mb-2 flex items-center gap-2.5 text-xs" style={{ color: "var(--col-dim)" }}>
+          <button
+            type="button"
+            onClick={() => router.push("/dashboard/casos/board")}
+            className="font-semibold hover:underline"
+          >
+            ← Voltar ao board
+          </button>
+          {caso.project_name && (
+            <>
+              <span style={{ color: "var(--col-divider)" }}>/</span>
+              <span className="font-semibold">{caso.project_name}</span>
+            </>
+          )}
+          {caso.module && modColor && (
+            <>
+              <span style={{ color: "var(--col-divider)" }}>/</span>
+              <span
+                className="rounded px-2 py-[2px] font-mono text-[10px] font-extrabold uppercase tracking-wider"
+                style={{ background: `${modColor}1f`, color: modColor }}
+              >
+                {caso.module}
+              </span>
+            </>
+          )}
+        </div>
 
-      {/* ── HEADER ───────────────────────────────────────────────────────── */}
-      <header className="rounded-2xl p-5"
-        style={{
-          background:           "var(--glass-card-bg)",
-          backdropFilter:       "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
-          border:               "1px solid var(--glass-card-border)",
-          boxShadow:            "var(--glass-shadow)",
-        }}>
+        {/* Identidade do caso */}
+        <div className="flex items-start justify-between gap-6">
+          <div className="min-w-0 flex-1">
+            {/* Pílulas: ID + status + prioridade */}
+            <div className="mb-1.5 flex items-baseline flex-wrap gap-2.5">
+              <span
+                className="rounded px-2 py-[2px] font-mono text-[13px] font-bold tracking-wider"
+                style={{ background: "var(--brand-bg)", color: "var(--brand-fg)" }}
+              >
+                {caso.case_id}
+              </span>
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full px-2 py-[2px] text-[10.5px] font-semibold"
+                style={{ background: status.bg, color: status.fg }}
+              >
+                <span className="h-[5px] w-[5px] rounded-full" style={{ background: status.dot }} />
+                {status.label}
+              </span>
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-[3px] text-[11px] font-bold"
+                style={{ background: "color-mix(in oklab, var(--danger-fg) 18%, transparent)", color: "var(--danger-fg)" }}
+              >
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: "currentColor" }} />
+                {PRIORITY_LABELS[caso.priority]}
+              </span>
+            </div>
 
-        {/* Linha 1: voltar + breadcrumb + ações */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <button type="button" onClick={() => router.push("/dashboard/casos/")}
-              className="p-2 rounded-xl transition-all flex-shrink-0" style={{ color: "var(--col-dim)" }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(241,245,249,0.8)"; e.currentTarget.style.color = "var(--col-muted)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--col-dim)"; }}>
-              <ArrowLeft className="h-5 w-5" />
-            </button>
+            {/* Título */}
+            <h1 className="text-[22px] font-extrabold leading-snug tracking-tight [text-wrap:pretty]">
+              {caso.title}
+            </h1>
 
-            <div className="min-w-0">
-              {/* Breadcrumb */}
-              <p className="text-xs font-medium flex items-center gap-1.5 truncate" style={{ color: "var(--col-dim)" }}>
-                <span>Casos</span>
-                {caso.module && (
-                  <>
-                    <span>/</span>
-                    {modHue !== null ? (
-                      <span className="px-1.5 py-0.5 rounded-md font-semibold"
-                        style={{ background: `hsl(${modHue} 85% 95%)`, color: `hsl(${modHue} 70% 30%)` }}>
-                        {caso.module}
-                      </span>
-                    ) : (
-                      <span>{caso.module}</span>
-                    )}
-                  </>
+            {/* Meta-row: Responsável | Atualizado */}
+            <div className="mt-2.5 flex items-center flex-wrap gap-4 text-[11.5px]" style={{ color: "var(--col-dim)" }}>
+              {/* Responsável */}
+              <div className="inline-flex items-center gap-2">
+                {responsavel ? (
+                  <span
+                    className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full text-[9px] font-bold text-white"
+                    style={{ background: avatarColor(responsavel) }}
+                    title={responsavel}
+                  >
+                    {initialsOf(responsavel)}
+                  </span>
+                ) : (
+                  <span
+                    className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full text-[9px] font-bold"
+                    style={{ background: "var(--glass-inner-border)", color: "var(--col-dim)" }}
+                  >
+                    ?
+                  </span>
                 )}
-                <span>/</span>
-                <span className="font-mono font-bold" style={{ color: "#1D4ED8" }}>{caso.case_id}</span>
-              </p>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--col-faint)" }}>
+                    Responsável
+                  </span>
+                  <span className="font-semibold" style={{ color: responsavel ? "var(--col-muted)" : "var(--col-dim)" }}>
+                    {responsavel || "Sem responsável"}
+                  </span>
+                </div>
+              </div>
 
-              {/* Pills (status + prioridade) + título */}
-              <div className="flex items-center flex-wrap gap-2 mt-1">
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold"
-                  style={{ background: statusStyle.bg, color: statusStyle.color, border: `1px solid ${statusStyle.dot}30` }}>
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: statusStyle.dot }} />
-                  {statusStyle.label}
+              {/* Divisor vertical */}
+              <div className="h-[26px] w-px" style={{ background: "var(--col-divider)" }} />
+
+              {/* Atualizado */}
+              <div className="flex flex-col">
+                <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--col-faint)" }}>
+                  Atualizado
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold"
-                  style={{ background: prioStyle.bg, color: prioStyle.color, border: `1px solid ${prioStyle.dot}30` }}>
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: prioStyle.dot }} />
-                  {prioStyle.label}
+                <span className="font-mono text-[11.5px] font-semibold" style={{ color: "var(--col-muted)" }}>
+                  {caso.updated_at ? formatDateBR(caso.updated_at) : "—"}
                 </span>
-                <h1 className="text-base font-extrabold tracking-tight truncate" style={{ color: "var(--col-heading)" }}>
-                  {caso.title}
-                </h1>
               </div>
             </div>
           </div>
 
-          {/* Ações */}
+          {/* Ações: Excluir + Editar */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <button type="button" onClick={() => setConfirmDelete(true)} disabled={deleting}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
-              style={{ color: "#DC2626", background: "rgba(254,226,226,0.4)", border: "1px solid rgba(252,165,165,0.4)" }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(254,226,226,0.8)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(254,226,226,0.4)"; }}>
-              <Trash2 className="h-4 w-4" />
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              disabled={deleting}
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[12.5px] font-semibold transition-colors"
+              style={{
+                color: "var(--danger-fg)",
+                background: "color-mix(in oklab, var(--danger-fg) 10%, transparent)",
+                border: "1px solid color-mix(in oklab, var(--danger-fg) 25%, transparent)",
+              }}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
               {deleting ? "Excluindo..." : "Excluir"}
             </button>
-            <button type="button" onClick={onEdit}
-              className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold text-white transition-all"
-              style={{ background: "linear-gradient(135deg,#2563EB,#3B82F6)", boxShadow: "0 2px 10px rgba(37,99,235,0.25)" }}
-              onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg,#1D4ED8,#2563EB)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg,#2563EB,#3B82F6)"; e.currentTarget.style.transform = "none"; }}>
-              <Pencil className="h-4 w-4" /> Editar
+            <button
+              type="button"
+              onClick={onEdit}
+              className="inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12.5px] font-semibold text-white"
+              style={{ background: "var(--brand-solid)" }}
+            >
+              <Pencil className="h-3.5 w-3.5" /> Editar
             </button>
           </div>
-        </div>
-
-        {/* Linha 2: metadados (responsável, última edição, tags) */}
-        <div className="flex items-center flex-wrap gap-x-4 gap-y-2 mt-3 pt-3"
-          style={{ borderTop: "1px solid var(--glass-inner-border)" }}>
-          {/* Responsável */}
-          <div className="inline-flex items-center gap-1.5 text-xs" style={{ color: "var(--col-muted)" }}>
-            <UserIcon className="h-3.5 w-3.5" />
-            <span style={{ color: caso.assigned_to_name ? "var(--col-body)" : "var(--col-dim)" }}>
-              {caso.assigned_to_name || "Sem responsável"}
-            </span>
-          </div>
-
-          {/* Última edição */}
-          {caso.last_modified_by_name && (
-            <div className="text-xs" style={{ color: "var(--col-dim)" }}>
-              Editado por <strong style={{ color: "var(--col-muted)" }}>{caso.last_modified_by_name}</strong>
-              {caso.updated_at && <> · {formatDateBR(caso.updated_at)}</>}
-            </div>
-          )}
-
-          {/* Tags */}
-          {caso.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 ml-auto">
-              {caso.tags.map(tag => (
-                <span key={tag.id}
-                  className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-white"
-                  style={{ backgroundColor: tag.color }}>
-                  {tag.name}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
       </header>
 
-      {/* ── CORPO (3 colunas) ────────────────────────────────────────────── */}
-      <div className="grid gap-5 items-start"
-        style={{ gridTemplateColumns: "260px minmax(0,1fr) 300px" }}>
+      {/* ===================== TAGS ROW ===================== */}
+      {caso.tags.length > 0 && (
+        <div
+          className="flex items-center gap-2 px-8 py-2.5"
+          style={{ background: "var(--glass-card-bg)", borderBottom: "1px solid var(--glass-card-border)" }}
+        >
+          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--col-faint)" }}>
+            Tags
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {caso.tags.map(tag => (
+              <span
+                key={tag.id}
+                className="rounded border px-1.5 py-[2px] font-mono text-[10px] font-semibold uppercase tracking-wider"
+                style={{
+                  // Fundo sutil com a cor da tag, borda média e texto na cor cheia
+                  // — preserva a estética mono/uppercase do design e ainda destaca a cor.
+                  background:  `${tag.color}1f`,  // ~12% alpha
+                  borderColor: `${tag.color}55`,  // ~33% alpha
+                  color:       tag.color,
+                }}
+              >
+                {tag.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
+      {/* ===================== MAIN 3-COL GRID ===================== */}
+      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[260px_1fr_300px]">
         <CaseStepperSidebar
           steps={steps}
           activeStep={activeStep}
