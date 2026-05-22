@@ -39,6 +39,19 @@
     --col-dim:           #94A3B8;
     --col-surface:       #eef2f7;
     --glass-card-header: linear-gradient(135deg,rgba(219,234,254,0.7),rgba(238,242,247,0.5));
+
+    /* Tokens novos — design da tela de detalhe de caso de teste */
+    --col-faint:         #94A3B8;
+    --col-divider:       #E2E8F0;
+    --surface-app:       #FAFBFC;
+    --brand-bg:          #EFF6FF;
+    --brand-fg:          #1D4ED8;
+    --brand-solid:       #2563EB;
+    --brand-glow:        #DBEAFE;
+    --success-bg:        #F0FDF4;
+    --success-fg:        #14532D;
+    --success-border:    #BBF7D0;
+    --danger-fg:         #DC2626;
   }
 
   .dark {
@@ -76,6 +89,19 @@
     --col-dim:           #475569;
     --col-surface:       #1E293B;
     --glass-card-header: linear-gradient(135deg,rgba(15,23,42,0.5),rgba(30,41,59,0.3));
+
+    /* Tokens novos (dark) — design da tela de detalhe de caso de teste */
+    --col-faint:         #64748B;
+    --col-divider:       #334155;
+    --surface-app:       #0B1628;
+    --brand-bg:          rgba(37,99,235,0.18);
+    --brand-fg:          #93C5FD;
+    --brand-solid:       #3B82F6;
+    --brand-glow:        rgba(59,130,246,0.25);
+    --success-bg:        rgba(16,185,129,0.12);
+    --success-fg:        #6EE7B7;
+    --success-border:    rgba(16,185,129,0.35);
+    --danger-fg:         #FCA5A5;
   }
 
   * {
