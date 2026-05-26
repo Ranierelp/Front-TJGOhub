@@ -20,6 +20,7 @@ export {
   getPaginated,
   getCached,
   clearCache,
+  extractDrfError,
 } from "./utils";
 
 // Re-exportar tipos úteis

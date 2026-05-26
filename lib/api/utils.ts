@@ -411,4 +411,52 @@ export const clearCache = (urlPattern?: string): void => {
   }
 };
 
+// =============================================================================
+// extractDrfError — extrai a primeira mensagem útil de um erro do DRF.
+//
+// Cobre os shapes que o backend usa:
+//   { name: ["Já existe..."] }                              ← DRF field-level
+//   { non_field_errors: ["..."] }                            ← DRF form-level
+//   { detail: "..." }                                        ← exceção genérica
+//   { status_code: 400, errors: { name: ["..."] } }          ← wrapper custom
+//        do projeto (apps/commons/api/v1/exceptions.py)
+//   "string" | ["string"]                                    ← variantes
+//
+// Percorre recursivamente até achar a primeira string. Use isso pra mostrar
+// toasts em vez do `apiError.message` genérico ("Dados inválidos...").
+// =============================================================================
+export function extractDrfError(details: unknown, fallback: string): string {
+  const found = findFirstString(details);
+  return found ?? fallback;
+}
+
+function findFirstString(value: unknown): string | null {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean" || value == null) return null;
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const r = findFirstString(item);
+      if (r) return r;
+    }
+    return null;
+  }
+
+  if (typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+
+    // "detail" tem prioridade — é a forma canônica de erro genérico do DRF
+    if (typeof obj.detail === "string") return obj.detail;
+
+    for (const [key, v] of Object.entries(obj)) {
+      // Ignora o wrapper `{status_code, errors}` do exception_handler custom
+      if (key === "status_code") continue;
+      const r = findFirstString(v);
+      if (r) return r;
+    }
+  }
+
+  return null;
+}
+
 export { apiClient };
