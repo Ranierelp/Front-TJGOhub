@@ -3,6 +3,7 @@
 import { Search, Filter, X } from "lucide-react";
 import type { Project } from "@/hooks/useProjects";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 export type PriorityFilter = "all" | "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
 
@@ -45,23 +46,21 @@ export function KanbanToolbar({
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2.5">
 
-      {/* Project select */}
-      <Select value={activeProjectId || "__all__"} onValueChange={v => onProjectChange(v === "__all__" ? "" : v)}>
-        <SelectTrigger className="w-auto h-auto py-[7px] text-xs font-semibold gap-2">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="__all__">Todos{allCount > 0 ? ` (${allCount})` : ""}</SelectItem>
-          {projects.map(p => {
-            const count = projectCounts[p.id] ?? 0;
-            return (
-              <SelectItem key={p.id} value={p.id}>
-                {p.name}{count > 0 ? ` (${count})` : ""}
-              </SelectItem>
-            );
-          })}
-        </SelectContent>
-      </Select>
+      {/* Project select com busca — útil quando a lista de projetos crescer */}
+      <SearchableSelect
+        value={activeProjectId || "__all__"}
+        onValueChange={v => onProjectChange(v === "__all__" ? "" : v)}
+        searchPlaceholder="Buscar projeto..."
+        emptyMessage="Nenhum projeto encontrado"
+        options={[
+          { value: "__all__", label: "Todos", badge: allCount > 0 ? String(allCount) : undefined },
+          ...projects.map(p => ({
+            value: p.id,
+            label: p.name,
+            badge: projectCounts[p.id] > 0 ? String(projectCounts[p.id]) : undefined,
+          })),
+        ]}
+      />
 
       {/* Search */}
       <div className="flex min-w-[200px] max-w-sm flex-1 items-center gap-2 rounded-lg border border-border bg-muted px-2.5 py-1.5">
