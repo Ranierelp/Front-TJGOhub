@@ -13,6 +13,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { DropResult } from "@hello-pangea/dnd";
+import { toast } from "sonner";
 
 import { get, post, del, api } from "@/lib/api";
 import type { KanbanBoardColumn } from "@/lib/types/kanban";
@@ -78,21 +79,32 @@ export function useKanban(projectId?: string) {
   }, [columns]);
 
   const createColumn = useCallback(async (name: string, color: string) => {
+    // Vincula a coluna ao projeto ativo. Sem projeto selecionado ("Todos"),
+    // nasce como global (project=null) — visível em todos os projetos.
     await post(api.endpoints.kanbanColumns, {
       name,
       color,
       order: columns.length,
-      project: null,
+      project: projectId || null,
     });
     fetchBoard();
-  }, [columns.length, fetchBoard]);
+  }, [columns.length, fetchBoard, projectId]);
 
   const deleteColumn = useCallback(async (id: string, targetColumnId?: string) => {
     const url = targetColumnId
       ? `${api.endpoints.kanbanColumns}${id}/?target_column_id=${targetColumnId}`
       : `${api.endpoints.kanbanColumns}${id}/`;
-    await del(url);
-    fetchBoard();
+    try {
+      await del(url);
+      fetchBoard();
+    } catch (err: unknown) {
+      // O backend devolve { error, cases_count } quando a coluna ainda tem casos
+      // (de qualquer projeto). Pega a mensagem do payload e mostra num toast.
+      const apiErr = err as { details?: { error?: string; cases_count?: number } };
+      const msg = apiErr?.details?.error || "Não foi possível remover a coluna.";
+      toast.error(msg);
+      throw err;  // re-throw pra que o caller (modal) saiba que falhou
+    }
   }, [fetchBoard]);
 
   return { columns, loading, error, refetch: fetchBoard, onDragEnd, createColumn, deleteColumn };
