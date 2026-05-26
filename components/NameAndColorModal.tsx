@@ -1,35 +1,61 @@
 "use client";
 
-import { useState } from "react";
+// =============================================================================
+// NameAndColorModal — modal genérico de "criar nome + cor".
+//
+// Compartilhado por:
+//   - Kanban → criar nova coluna
+//   - TagSelector → criar nova tag
+//
+// Usa tokens do shadcn (bg-background, text-muted-foreground, etc.) pra
+// respeitar o tema claro/escuro automaticamente.
+// =============================================================================
+
+import { useEffect, useState } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 
-const PRESET_COLORS = [
-  "#6366f1", "#3b82f6", "#22c55e", "#ef4444",
-  "#f59e0b", "#8b5cf6", "#ec4899", "#14b8a6",
-  "#f97316", "#6b7280",
-];
-
 interface Props {
   open: boolean;
   onClose: () => void;
+  /** Recebe (nome, cor) e cria o recurso. Lança erro pra manter o modal aberto. */
   onSubmit: (name: string, color: string) => Promise<void>;
+
+  title:        string;   // ex.: "Nova coluna" / "Nova tag"
+  nameLabel:    string;   // ex.: "Nome"
+  colorLabel:   string;   // ex.: "Cor da coluna" / "Escolha uma cor"
+  placeholder:  string;   // ex.: "Ex: Cancelado, Em revisão…"
+  submitLabel:  string;   // ex.: "Criar coluna" / "Criar tag"
+  colors:       string[]; // paleta de cores
+  defaultColor: string;   // cor inicial selecionada
 }
 
-export function AddColumnModal({ open, onClose, onSubmit }: Props) {
+export function NameAndColorModal({
+  open, onClose, onSubmit,
+  title, nameLabel, colorLabel, placeholder, submitLabel,
+  colors, defaultColor,
+}: Props) {
   const [name,   setName]   = useState("");
-  const [color,  setColor]  = useState("#6366f1");
+  const [color,  setColor]  = useState(defaultColor);
   const [saving, setSaving] = useState(false);
+
+  // Reseta o estado sempre que o modal abre — evita persistir valores antigos
+  useEffect(() => {
+    if (open) {
+      setName("");
+      setColor(defaultColor);
+    }
+  }, [open, defaultColor]);
 
   const handleSubmit = async () => {
     if (!name.trim()) return;
     setSaving(true);
     try {
       await onSubmit(name.trim(), color);
-      setName("");
-      setColor("#6366f1");
       onClose();
+    } catch {
+      // O caller já mostrou toast; mantém modal aberto pra correção.
     } finally {
       setSaving(false);
     }
@@ -39,39 +65,39 @@ export function AddColumnModal({ open, onClose, onSubmit }: Props) {
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Nova coluna</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Nome
+              {nameLabel}
             </label>
             <input
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-              placeholder="Ex: Cancelado, Em revisão…"
+              placeholder={placeholder}
               className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:border-ring"
             />
           </div>
 
           <div>
             <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Cor da coluna
+              {colorLabel}
             </label>
             <div className="flex flex-wrap gap-2">
-              {PRESET_COLORS.map((c) => (
+              {colors.map((c) => (
                 <button
                   key={c}
                   type="button"
                   onClick={() => setColor(c)}
                   className="h-7 w-7 rounded-full border-2 transition-transform hover:scale-110"
                   style={{
-                    background: c,
-                    borderColor: color === c ? "hsl(var(--foreground))" : "transparent",
-                    outline: color === c ? "2px solid hsl(var(--background))" : "none",
+                    background:    c,
+                    borderColor:   color === c ? "hsl(var(--foreground))" : "transparent",
+                    outline:       color === c ? "2px solid hsl(var(--background))" : "none",
                     outlineOffset: color === c ? "-4px" : "0",
                   }}
                 />
@@ -98,7 +124,7 @@ export function AddColumnModal({ open, onClose, onSubmit }: Props) {
             disabled={!name.trim() || saving}
             className="rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {saving ? "Criando…" : "Criar coluna"}
+            {saving ? "Criando…" : submitLabel}
           </button>
         </DialogFooter>
       </DialogContent>

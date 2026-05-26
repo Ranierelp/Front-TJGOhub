@@ -7,7 +7,7 @@ import { Plus } from "lucide-react";
 import { useKanban }   from "@/hooks/useKanban";
 import { useProjects } from "@/hooks/useProjects";
 import { KanbanColumn }      from "./KanbanColumn";
-import { AddColumnModal }    from "./AddColumnModal";
+import { NameAndColorModal } from "@/components/NameAndColorModal";
 import { DeleteColumnModal } from "./DeleteColumnModal";
 import { KanbanToolbar, type PriorityFilter, type Assignee } from "./KanbanToolbar";
 import { Spinner } from "@/components/ui/spinner";
@@ -118,10 +118,21 @@ export function KanbanBoard() {
         </div>
       </DragDropContext>
 
-      <AddColumnModal
+      <NameAndColorModal
         open={addColumnOpen}
         onClose={() => setAddColumnOpen(false)}
         onSubmit={createColumn}
+        title="Nova coluna"
+        nameLabel="Nome"
+        colorLabel="Cor da coluna"
+        placeholder="Ex: Cancelado, Em revisão…"
+        submitLabel="Criar coluna"
+        colors={[
+          "#6366f1", "#3b82f6", "#22c55e", "#ef4444",
+          "#f59e0b", "#8b5cf6", "#ec4899", "#14b8a6",
+          "#f97316", "#6b7280",
+        ]}
+        defaultColor="#6366f1"
       />
 
       {deletingColumn && (
