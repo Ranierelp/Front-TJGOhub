@@ -33,6 +33,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 
+import { TagSelector } from "./TagSelector";
 import {
   STATUS_OPTS,
   PRIORITY_OPTS,
@@ -50,8 +51,9 @@ export interface FormUser {
 }
 
 export interface FormTag {
-  id:   string;
-  name: string;
+  id:    string;
+  name:  string;
+  color: string;
 }
 
 // O sentinela "__none__" representa "não atribuído". Radix Select não aceita
@@ -72,6 +74,7 @@ interface Props<T extends FieldValues & CaseFormBaseData> {
   tags:         FormTag[];
   selectedTags: string[];
   onToggleTag:  (id: string) => void;
+  onCreateTag:  (name: string, color: string) => Promise<FormTag>;
 
   // Slot para o campo "Projeto" — varia entre criar (select) e editar (read-only)
   projectSlot: React.ReactNode;
@@ -89,6 +92,7 @@ export function CaseFormSidebar<T extends FieldValues & CaseFormBaseData>({
   tags,
   selectedTags,
   onToggleTag,
+  onCreateTag,
   projectSlot,
 }: Props<T>) {
   // Helpers tipados — assumem que T contém os campos do schema base. O cast
@@ -198,30 +202,15 @@ export function CaseFormSidebar<T extends FieldValues & CaseFormBaseData>({
       </GlassCard>
 
       {/* ── Tags ── */}
-      {tags.length > 0 && (
-        <GlassCard className="p-5">
-          <SLabel emoji="🏷️">Tags</SLabel>
-          <div className="flex flex-wrap gap-2">
-            {tags.map(tag => {
-              const sel = selectedTags.includes(tag.id);
-              return (
-                <button key={tag.id} type="button" onClick={() => onToggleTag(tag.id)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
-                  style={sel ? {
-                    background: "linear-gradient(135deg,rgba(219,234,254,0.8),rgba(191,219,254,0.5))",
-                    color: "#1D4ED8", border: "1px solid rgba(147,197,253,0.5)",
-                  } : {
-                    border: "1.5px dashed rgba(203,213,225,0.8)",
-                    color: "var(--col-dim)", background: "transparent",
-                  }}>
-                  {tag.name}
-                  {sel && <span style={{ fontSize: 9, color: "#60A5FA" }}>✕</span>}
-                </button>
-              );
-            })}
-          </div>
-        </GlassCard>
-      )}
+      <GlassCard className="p-5">
+        <SLabel emoji="🏷️">Tags</SLabel>
+        <TagSelector
+          tags={tags}
+          selectedTags={selectedTags}
+          onToggleTag={onToggleTag}
+          onCreateTag={onCreateTag}
+        />
+      </GlassCard>
 
       {/* ── Playwright ── */}
       <GlassCard className="p-5 space-y-3">

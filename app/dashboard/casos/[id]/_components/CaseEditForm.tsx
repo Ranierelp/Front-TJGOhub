@@ -194,7 +194,7 @@ interface Props {
 // CaseEditForm
 // =============================================================================
 export function CaseEditForm({ caso, onCancel, onSaved }: Props) {
-  const { tags, users, loading, submitting, update, removeAttachment, updateAttachment } = useEditCase(caso.id);
+  const { tags, users, loading, submitting, update, removeAttachment, updateAttachment, createTag } = useEditCase(caso.id);
 
   const [existingSteps, setExistingSteps] = useState<EditableAttachment[]>(
     [...caso.attachments].sort((a, b) => a.order - b.order)
@@ -338,6 +338,7 @@ export function CaseEditForm({ caso, onCancel, onSaved }: Props) {
             tags={tags}
             selectedTags={selectedTags}
             onToggleTag={toggleTag}
+            onCreateTag={createTag}
             projectSlot={
               <div>
                 <FLabel>Projeto</FLabel>

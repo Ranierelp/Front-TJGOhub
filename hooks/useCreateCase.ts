@@ -14,7 +14,7 @@ import { useState, useEffect } from "react";
 import { useRouter }           from "next/navigation";
 import { toast }               from "sonner";
 
-import { get, post, upload, api } from "@/lib/api";
+import { get, post, upload, api, extractDrfError } from "@/lib/api";
 
 // Um passo do caso de teste — imagem é opcional
 export interface PendingStep {
@@ -42,6 +42,7 @@ export interface UseCreateCaseReturn {
   loading:    boolean;
   submitting: boolean;
   submit:     (formData: Record<string, unknown>, steps: PendingStep[]) => Promise<void>;
+  createTag:  (name: string, color: string) => Promise<ApiTag>;
 }
 
 export function useCreateCase(): UseCreateCaseReturn {
@@ -113,5 +114,20 @@ export function useCreateCase(): UseCreateCaseReturn {
     }
   };
 
-  return { projects, tags, users, loading, submitting, submit };
+  // Cria uma tag nova via POST /api/v1/tags/ e injeta no estado local
+  // para que o TagSelector reflita imediatamente sem refetch.
+  const createTag = async (name: string, color: string): Promise<ApiTag> => {
+    try {
+      const resp = await post<ApiTag>(api.endpoints.tags, { name, color });
+      setTags(prev => [...prev, resp.data]);
+      toast.success(`Tag "${name}" criada.`);
+      return resp.data;
+    } catch (err: unknown) {
+      const apiErr = err as { message?: string; details?: unknown };
+      toast.error(extractDrfError(apiErr.details, apiErr.message ?? "Erro ao criar tag"));
+      throw err;
+    }
+  };
+
+  return { projects, tags, users, loading, submitting, submit, createTag };
 }

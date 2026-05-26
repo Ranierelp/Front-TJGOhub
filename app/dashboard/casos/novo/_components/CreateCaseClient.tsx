@@ -28,7 +28,7 @@ type FormData = z.infer<typeof schema>;
 
 export function CreateCaseClient() {
   const router = useRouter();
-  const { projects, tags, users, loading, submitting, submit } = useCreateCase();
+  const { projects, tags, users, loading, submitting, submit, createTag } = useCreateCase();
 
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [steps,        setSteps]        = useState<PendingStep[]>([{ description: "" }]);
@@ -112,6 +112,7 @@ export function CreateCaseClient() {
             tags={tags}
             selectedTags={selectedTags}
             onToggleTag={toggleTag}
+            onCreateTag={createTag}
             projectSlot={
               <div>
                 <FLabel required>Projeto</FLabel>

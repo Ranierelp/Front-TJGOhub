@@ -16,7 +16,7 @@ import { useState, useEffect } from "react";
 import { useRouter }           from "next/navigation";
 import { toast }               from "sonner";
 
-import { get, patch, del, upload, api } from "@/lib/api";
+import { get, post, patch, del, upload, api, extractDrfError } from "@/lib/api";
 import apiClient                        from "@/lib/api/client";
 import type { PendingStep, ApiUser }    from "./useCreateCase";
 
@@ -35,6 +35,7 @@ export interface UseEditCaseReturn {
   deleteCase:       () => Promise<void>;
   removeAttachment: (attachmentId: string) => Promise<void>;
   updateAttachment: (attachmentId: string, description: string, newImage?: File) => Promise<void>;
+  createTag:        (name: string, color: string) => Promise<ApiTag>;
 }
 
 export function useEditCase(caseId: string): UseEditCaseReturn {
@@ -169,5 +170,20 @@ export function useEditCase(caseId: string): UseEditCaseReturn {
     }
   };
 
-  return { projects, tags, users, loading, submitting, deleting, update, deleteCase, removeAttachment, updateAttachment };
+  // Cria uma tag nova via POST /api/v1/tags/ e injeta no estado local
+  // para que o TagSelector reflita imediatamente sem refetch.
+  const createTag = async (name: string, color: string): Promise<ApiTag> => {
+    try {
+      const resp = await post<ApiTag>(api.endpoints.tags, { name, color });
+      setTags(prev => [...prev, resp.data]);
+      toast.success(`Tag "${name}" criada.`);
+      return resp.data;
+    } catch (err: unknown) {
+      const apiErr = err as { message?: string; details?: unknown };
+      toast.error(extractDrfError(apiErr.details, apiErr.message ?? "Erro ao criar tag"));
+      throw err;
+    }
+  };
+
+  return { projects, tags, users, loading, submitting, deleting, update, deleteCase, removeAttachment, updateAttachment, createTag };
 }
