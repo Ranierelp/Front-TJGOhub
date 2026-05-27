@@ -10,8 +10,6 @@ export const siteConfig = {
     { label: "Projetos",     href: "/dashboard/projetos" },
     { label: "Execuções",    href: "/dashboard/execucoes" },
     { label: "Casos",        href: "/dashboard/casos/board" },
-    { label: "Tags",         href: "/dashboard/tags" },
-    { label: "Configurações", href: "/dashboard/configuracoes" },
   ] as Array<{ label: string; href: string }>,
   // navMenuItems: itens do menu lateral mobile + dropdown do avatar
   navMenuItems: [
@@ -19,8 +17,6 @@ export const siteConfig = {
     { label: "Projetos",     href: "/dashboard/projetos" },
     { label: "Execuções",    href: "/dashboard/execucoes" },
     { label: "Casos",        href: "/dashboard/casos/board" },
-    { label: "Tags",         href: "/dashboard/tags" },
-    { label: "Configurações", href: "/dashboard/configuracoes" },
   ],
   links: {},
 };
