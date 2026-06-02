@@ -3,7 +3,7 @@
 import React from "react";
 import NextLink from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { LogOut, Settings, LayoutDashboard, Menu, X, Bell, Calendar } from "lucide-react";
+import { LogOut, Settings, LayoutDashboard, Menu, X, Bell, Calendar, User } from "lucide-react";
 import { useState } from "react";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -110,9 +110,13 @@ export const Navbar = () => {
     ? (user.firstName?.[0] || user.username?.[0] || "U").toUpperCase()
     : "U";
 
-  // Checa se o usuário tem papel de admin ou staff para mostrar o painel admin
   const isAdminOrStaff =
     user?.roles?.includes("admin") || user?.roles?.includes("staff");
+
+  // Filtra navItems: itens com adminOnly só aparecem para admins/staff
+  const visibleNavItems = siteConfig.navItems.filter(
+    (item) => !item.adminOnly || isAdminOrStaff,
+  );
 
   const formattedDate = new Date().toLocaleDateString("pt-BR", {
     day: "numeric",
@@ -229,9 +233,14 @@ export const Navbar = () => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
 
+                  <DropdownMenuItem onClick={() => router.push("/dashboard/perfil")}>
+                    <User className="mr-2 h-4 w-4" />
+                    Meu Perfil
+                  </DropdownMenuItem>
+
                   {/* Item de admin — só aparece para admin/staff */}
                   {isAdminOrStaff && (
-                    <DropdownMenuItem onClick={() => router.push("/dashboard/configuracoes")}>
+                    <DropdownMenuItem onClick={() => router.push("/dashboard/usuarios")}>
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       Painel Administrativo
                     </DropdownMenuItem>
@@ -280,7 +289,7 @@ export const Navbar = () => {
       <div className="hidden sm:block bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700">
         <div className="w-full px-4 lg:px-6">
           <div className="flex items-center gap-1">
-            {siteConfig.navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               // Lógica de aba ativa — explicada no CONCEITO 5 acima
               const isActive =
                 item.href === "/dashboard"
@@ -319,7 +328,7 @@ export const Navbar = () => {
             <Calendar size={12} />
             <span>{formattedDate}</span>
           </div>
-          {siteConfig.navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const isActive =
               item.href === "/dashboard"
                 ? pathname === "/dashboard"

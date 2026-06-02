@@ -161,15 +161,16 @@ interface ApiUserResponse {
 //   def map_user(api_data: dict) -> User:
 //       return User(first_name=api_data['first_name'], ...)
 // =============================================================================
-function mapApiUserToUser(apiUser: ApiUserResponse): User {
+export function mapApiUserToUser(apiUser: ApiUserResponse): User {
   // Constrói a lista de papéis baseado nos campos do Django
   const roles: string[] = [];
-  if (apiUser.is_superuser) roles.push("ADMIN");
-  if (apiUser.is_staff) roles.push("STAFF");
+  if (apiUser.is_superuser) roles.push("admin");
+  if (apiUser.is_staff) roles.push("staff");
   if (apiUser.groups) {
-    apiUser.groups.forEach(g => roles.push(g.name.toUpperCase()));
+    // grupos armazenados em lowercase para bater com os checks de hasRole("admin")
+    apiUser.groups.forEach(g => roles.push(g.name.toLowerCase()));
   }
-  if (roles.length === 0) roles.push("USER"); // fallback: todo usuário tem ao menos USER
+  if (roles.length === 0) roles.push("user"); // fallback: todo usuário tem ao menos user
 
   return {
     id: apiUser.id || String(apiUser.pkid),
