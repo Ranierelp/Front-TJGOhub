@@ -42,6 +42,8 @@ export const api = {
     me: "/api/v1/user/user/me/",
     users: "/api/v1/user/user/",
     logout: "/api/v1/user/logout/",
+    requestPasswordReset: "/api/v1/user/request-password-reset/",
+    passwordReset: "/api/v1/user/password-reset/",
 
     // Recursos principais
     projects: "/api/v1/projects/",

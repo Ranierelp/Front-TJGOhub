@@ -83,17 +83,7 @@ export default function LoginPage() {
   return (
     // AuthCard cuida do fundo + círculos + card + header com escudo.
     // Passamos subtitle, footer e o formulário como children.
-    <AuthCard
-      subtitle="Playwright Results Hub"
-      footer={
-        <p className="text-sm text-gray-500">
-          Não tem uma conta?{" "}
-          <Link href="/auth/registro" className="text-blue-600 hover:text-blue-800 font-medium">
-            Criar conta
-          </Link>
-        </p>
-      }
-    >
+    <AuthCard subtitle="Playwright Results Hub">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
         {/* Campo: e-mail — label acima do input, igual ao Django */}

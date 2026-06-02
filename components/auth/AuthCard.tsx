@@ -25,7 +25,7 @@ import { Shield } from "lucide-react";
 interface AuthCardProps {
   subtitle: string;
   children: React.ReactNode;
-  footer: React.ReactNode;
+  footer?: React.ReactNode;
   wide?: boolean;
 }
 
@@ -73,9 +73,11 @@ export function AuthCard({ subtitle, children, footer, wide = false }: AuthCardP
         <div className="p-8">{children}</div>
 
         {/* Rodapé do card — separador + link de navegação */}
-        <div className="px-8 pb-6 pt-4 border-t border-gray-100 text-center">
-          {footer}
-        </div>
+        {footer && (
+          <div className="px-8 pb-6 pt-4 border-t border-gray-100 text-center">
+            {footer}
+          </div>
+        )}
       </div>
     </main>
   );
