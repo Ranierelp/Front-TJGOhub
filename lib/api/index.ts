@@ -41,6 +41,7 @@ export const api = {
     register: "/api/v1/user/register/",
     me: "/api/v1/user/user/me/",
     users: "/api/v1/user/user/",
+    usersAssignable: "/api/v1/user/user/assignable/",
     logout: "/api/v1/user/logout/",
     requestPasswordReset: "/api/v1/user/request-password-reset/",
     passwordReset: "/api/v1/user/password-reset/",

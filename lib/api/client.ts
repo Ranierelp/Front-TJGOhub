@@ -169,7 +169,12 @@ apiClient.interceptors.response.use(
       _retry?: boolean;
     };
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // O endpoint de token retorna 401 quando as credenciais são inválidas —
+    // isso não é "token expirado", é erro de login. Deixa propagar normalmente
+    // para o authStore exibir a mensagem do DRF ("Usuário e/ou senha incorreto(s).").
+    const isLoginEndpoint = error.config?.url?.includes("/token/");
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isLoginEndpoint) {
       originalRequest._retry = true;
 
       try {
@@ -228,6 +233,7 @@ apiClient.interceptors.response.use(
 
     switch (error.response?.status) {
       case 400: apiError.message = "Dados inválidos na requisição"; break;
+      case 401: apiError.message = "Credenciais inválidas"; break;
       case 403: apiError.message = "Acesso negado - permissões insuficientes"; break;
       case 404: apiError.message = "Recurso não encontrado"; break;
       case 409: apiError.message = "Conflito - recurso já existe"; break;
