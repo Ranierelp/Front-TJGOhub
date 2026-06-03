@@ -67,13 +67,15 @@ export function ProjectDetailClient({ id }: { id: string }) {
                 <h1 className="text-xl font-extrabold" style={{ color: "var(--col-heading)", letterSpacing: "-0.03em" }}>
                   {project.name}
                 </h1>
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-lg"
+                <span
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md"
                   style={{
-                    background: project.is_active ? "rgba(209,250,229,0.6)" : "rgba(254,226,226,0.6)",
-                    color: project.is_active ? "#10B981" : "#EF4444",
-                    border: `1px solid ${project.is_active ? "rgba(167,243,208,0.5)" : "rgba(252,165,165,0.5)"}`,
+                    background: project.is_active ? "var(--success-bg)"     : "var(--danger-bg)",
+                    color:      project.is_active ? "var(--success-fg)"     : "var(--danger-fg)",
+                    border:     `1px solid ${project.is_active ? "var(--success-border)" : "var(--danger-border)"}`,
                   }}>
-                  {project.is_active ? "⚡ Ativo" : "🔴 Arquivado"}
+                  <span className="h-[5px] w-[5px] rounded-full" style={{ background: "currentColor" }} />
+                  {project.is_active ? "Ativo" : "Arquivado"}
                 </span>
               </div>
               <p className="text-xs font-mono mt-0.5" style={{ color: "var(--col-dim)" }}>/{project.slug}</p>
@@ -82,14 +84,18 @@ export function ProjectDetailClient({ id }: { id: string }) {
           <div className="flex gap-2 flex-shrink-0">
             {project.is_active && (
               <button onClick={() => setArchiving(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-                style={{ border: "1px solid rgba(226,232,240,0.7)", color: "var(--col-muted)", background: "transparent" }}>
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                style={{ border: "1px solid var(--warning-border)", color: "var(--warning-fg)", background: "var(--warning-bg)" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "rgba(251,146,60,0.1)"; e.currentTarget.style.border = "1px solid rgba(251,146,60,0.5)"; e.currentTarget.style.color = "#EA580C"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "var(--warning-bg)"; e.currentTarget.style.border = "1px solid var(--warning-border)"; e.currentTarget.style.color = "var(--warning-fg)"; }}>
                 <Archive size={14} /> Arquivar
               </button>
             )}
             <button onClick={() => router.push(`/dashboard/projetos/${id}/editar`)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-              style={{ border: "1px solid rgba(226,232,240,0.7)", color: "var(--col-muted)", background: "transparent" }}>
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+              style={{ border: "1px solid var(--glass-inner-border)", color: "var(--col-muted)", background: "transparent" }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(59,130,246,0.1)"; e.currentTarget.style.border = "1px solid rgba(59,130,246,0.4)"; e.currentTarget.style.color = "#2563EB"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.border = "1px solid var(--glass-inner-border)"; e.currentTarget.style.color = "var(--col-muted)"; }}>
               <Edit2 size={14} /> Editar
             </button>
             <button className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold text-white"
@@ -106,7 +112,7 @@ export function ProjectDetailClient({ id }: { id: string }) {
             <p className="text-sm leading-relaxed" style={{ color: "var(--col-body)" }}>
               {project.description || <span style={{ color: "var(--col-dim)" }}>Sem descrição.</span>}
             </p>
-            <div className="pt-3 space-y-1" style={{ borderTop: "1px solid rgba(226,232,240,0.3)" }}>
+            <div className="pt-3 space-y-1" style={{ borderTop: "1px solid var(--glass-inner-border)" }}>
               <p className="text-xs" style={{ color: "var(--col-dim)" }}>
                 Criado por <strong style={{ color: "var(--col-body)" }}>{project.created_by_name || "—"}</strong> em {date}
               </p>
@@ -133,10 +139,10 @@ export function ProjectDetailClient({ id }: { id: string }) {
             <button key={t.id} onClick={() => setActiveTab(t.id)}
               className="px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
               style={{
-                background: activeTab === t.id ? "rgba(255,255,255,0.9)" : "transparent",
-                color: activeTab === t.id ? "#2563EB" : "var(--col-muted)",
-                border: activeTab === t.id ? "1px solid rgba(147,197,253,0.4)" : "1px solid transparent",
-                boxShadow: activeTab === t.id ? "0 2px 8px rgba(37,99,235,0.08)" : "none",
+                background: activeTab === t.id ? "var(--glass-card-bg)" : "transparent",
+                color:      activeTab === t.id ? "var(--brand-solid)"   : "var(--col-muted)",
+                border:     activeTab === t.id ? "1px solid var(--glass-card-border)" : "1px solid transparent",
+                boxShadow:  activeTab === t.id ? "var(--glass-shadow)"  : "none",
               }}>
               {t.label}
             </button>

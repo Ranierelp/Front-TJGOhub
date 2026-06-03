@@ -66,17 +66,19 @@ export function ProjectFormClient({ mode, initialData, onSubmit, onCancel, onArc
             </h1>
           </div>
           <div className="flex gap-3">
-            <button onClick={onCancel} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-              style={{ border: "1px solid var(--glass-inner-border)", color: "var(--col-muted)", background: "transparent" }}>
+            <button onClick={onCancel} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+              style={{ border: "1px solid var(--glass-inner-border)", color: "var(--col-muted)", background: "var(--glass-field-bg)" }}
+              onMouseEnter={e => { e.currentTarget.style.background = "var(--glass-card-bg)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "var(--glass-field-bg)"; }}>
               <ArrowLeft size={14} /> Cancelar
             </button>
             {/* Botão arquivar — só aparece na tela de edição */}
             {onArchive && (
               <button type="button" onClick={onArchive}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
-                style={{ border: "1px solid rgba(245,158,11,0.4)", color: "#F59E0B", background: "rgba(254,243,199,0.4)" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(254,243,199,0.7)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(254,243,199,0.4)"; }}>
+                style={{ border: "1px solid var(--warning-border)", color: "var(--warning-fg)", background: "var(--warning-bg)" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "rgba(251,146,60,0.1)"; e.currentTarget.style.border = "1px solid rgba(251,146,60,0.5)"; e.currentTarget.style.color = "#EA580C"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "var(--warning-bg)"; e.currentTarget.style.border = "1px solid var(--warning-border)"; e.currentTarget.style.color = "var(--warning-fg)"; }}>
                 <Archive size={14} /> Arquivar
               </button>
             )}
@@ -123,7 +125,7 @@ export function ProjectFormClient({ mode, initialData, onSubmit, onCancel, onArc
             {/* Preview do slug */}
             {(previewSlug || mode === "edit") && (
               <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
-                style={{ background: "linear-gradient(135deg,rgba(219,234,254,0.5),rgba(239,246,255,0.4))", border: "1px solid rgba(147,197,253,0.3)" }}>
+                style={{ background: "var(--pending-bg)", border: "1px solid var(--glass-inner-border)" }}>
                 <Link2 size={14} style={{ color: "#2563EB", flexShrink: 0 }} />
                 <div>
                   <p className="text-xs" style={{ color: "var(--col-dim)" }}>Slug gerado:</p>
@@ -151,7 +153,7 @@ export function ProjectFormClient({ mode, initialData, onSubmit, onCancel, onArc
               style={{ background: "var(--glass-field-bg)", border: "1px solid var(--glass-inner-border)" }}>
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
-                  style={{ background: "linear-gradient(135deg,rgba(219,234,254,0.8),rgba(191,219,254,0.5))" }}>📂</div>
+                  style={{ background: "var(--glass-card-bg)", border: "1px solid var(--glass-inner-border)" }}>📂</div>
                 <div>
                   <p className="text-sm font-bold" style={{ color: name ? "var(--col-heading)" : "var(--col-dim)" }}>
                     {name || "Nome do projeto"}

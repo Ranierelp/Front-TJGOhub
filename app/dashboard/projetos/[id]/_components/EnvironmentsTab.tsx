@@ -7,6 +7,7 @@ import { Loader2, Plus, Globe, Trash2, Server } from "lucide-react";
 import { toast } from "sonner";
 import { GlassCard } from "../../_components/GlassBackground";
 import { SimpleDeleteModal, Overlay } from "../../_components/ProjectModals";
+import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select";
 import {
   listEnvironments, createEnvironment, archiveEnvironment,
   type EnvironmentItem,
@@ -57,12 +58,14 @@ function CreateEnvModal({ projectId, onSuccess, onCancel }: {
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="text-xs font-semibold block mb-1.5" style={{ color: "var(--col-muted)" }}>Tipo</label>
-            <select value={envType} onChange={(e) => setEnvType(e.target.value)}
-              className="glass-input w-full px-3.5 py-2.5 rounded-xl text-sm appearance-none">
-              <option value="development">Desenvolvimento</option>
-              <option value="staging">Homologação</option>
-              <option value="production">Produção</option>
-            </select>
+            <Select value={envType} onValueChange={setEnvType}>
+              <SelectTrigger className="w-full" placeholder="Selecione o tipo" />
+              <SelectContent>
+                <SelectItem value="development">Desenvolvimento</SelectItem>
+                <SelectItem value="staging">Homologação</SelectItem>
+                <SelectItem value="production">Produção</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="text-xs font-semibold block mb-1.5" style={{ color: "var(--col-muted)" }}>URL Base</label>
@@ -142,12 +145,15 @@ export function EnvironmentsTab({ projectId }: { projectId: string }) {
                   {s.label}
                 </span>
                 <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full" style={{ background: env.is_active ? "#10B981" : "#EF4444" }} />
-                    <span className="text-xs font-medium" style={{ color: env.is_active ? "#10B981" : "#EF4444" }}>
-                      {env.is_active ? "Ativo" : "Inativo"}
-                    </span>
-                  </div>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md"
+                    style={{
+                      background: env.is_active ? "var(--success-bg)"   : "var(--danger-bg)",
+                      color:      env.is_active ? "var(--success-fg)"   : "var(--danger-fg)",
+                      border:     `1px solid ${env.is_active ? "var(--success-border)" : "var(--danger-border)"}`,
+                    }}>
+                    <span className="h-[5px] w-[5px] rounded-full" style={{ background: "currentColor" }} />
+                    {env.is_active ? "Ativo" : "Inativo"}
+                  </span>
                   <button onClick={() => setTarget(env)}
                     className="w-6 h-6 rounded-lg flex items-center justify-center transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
                     style={{ color: "var(--col-dim)" }} title="Arquivar ambiente">
@@ -167,11 +173,11 @@ export function EnvironmentsTab({ projectId }: { projectId: string }) {
         {/* Card "Novo Ambiente" */}
         <button onClick={() => setCreating(true)}
           className="p-5 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all"
-          style={{ border: "2px dashed rgba(147,197,253,0.5)", background: "rgba(239,246,255,0.3)" }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239,246,255,0.55)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(239,246,255,0.3)"; }}>
-          <Plus size={20} style={{ color: "#3B82F6" }} />
-          <p className="text-sm font-semibold" style={{ color: "#3B82F6" }}>Novo Ambiente</p>
+          style={{ border: "1.5px dashed var(--brand-solid)", background: "var(--brand-bg)" }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--brand-glow)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "var(--brand-bg)"; }}>
+          <Plus size={20} style={{ color: "var(--brand-fg)" }} />
+          <p className="text-sm font-semibold" style={{ color: "var(--brand-fg)" }}>Novo Ambiente</p>
         </button>
       </div>
 

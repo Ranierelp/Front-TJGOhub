@@ -21,9 +21,9 @@ interface TestCase {
 interface DRFPage<T> { count: number; results: T[]; }
 
 const STATUS_STYLE = {
-  DRAFT:      { label: "Rascunho",   bg: "linear-gradient(135deg,#FEF3C7,#FDE68A)",  color: "#92400E" },
-  ACTIVE:     { label: "Ativo",      bg: "linear-gradient(135deg,#D1FAE5,#A7F3D0)",  color: "#065F46" },
-  DEPRECATED: { label: "Depreciado", bg: "linear-gradient(135deg,#FEE2E2,#FECACA)", color: "#991B1B" },
+  DRAFT:      { label: "Rascunho",   bg: "var(--warning-bg)", color: "var(--warning-fg)" },
+  ACTIVE:     { label: "Ativo",      bg: "var(--success-bg)", color: "var(--success-fg)" },
+  DEPRECATED: { label: "Depreciado", bg: "var(--danger-bg)",  color: "var(--danger-fg)"  },
 };
 
 // Colunas: ID | Título | Status | Excluir | Chevron
@@ -71,8 +71,10 @@ export function TestCasesTab({ projectId }: { projectId: string }) {
             placeholder="Buscar casos..." className="glass-input w-full pl-9 pr-3.5 py-2 rounded-xl text-sm" />
         </div>
         <button onClick={() => router.push("/dashboard/casos/novo")}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
-          style={{ border: "2px dashed rgba(147,197,253,0.5)", color: "#3B82F6", background: "rgba(239,246,255,0.4)" }}>
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+          style={{ border: "1.5px dashed var(--brand-solid)", color: "var(--brand-fg)", background: "var(--brand-bg)" }}
+          onMouseEnter={e => { e.currentTarget.style.background = "var(--brand-glow)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "var(--brand-bg)"; }}>
           <Plus size={14} /> Novo Caso
         </button>
       </div>

@@ -28,12 +28,16 @@ interface Props {
 // Badge de status (Ativo / Arquivado)
 function StatusBadge({ isActive }: { isActive: boolean }) {
   return (
-    <span className="text-xs font-semibold px-2.5 py-1 rounded-lg" style={{
-      background: isActive ? "rgba(209,250,229,0.6)" : "rgba(254,226,226,0.6)",
-      color: isActive ? "#10B981" : "#EF4444",
-      border: `1px solid ${isActive ? "rgba(167,243,208,0.5)" : "rgba(252,165,165,0.5)"}`,
-    }}>
-      {isActive ? "⚡ Ativo" : "🔴 Arquivado"}
+    <span
+      className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md"
+      style={{
+        background: isActive ? "var(--success-bg)"     : "var(--danger-bg)",
+        color:      isActive ? "var(--success-fg)"     : "var(--danger-fg)",
+        border:     `1px solid ${isActive ? "var(--success-border)" : "var(--danger-border)"}`,
+      }}
+    >
+      <span className="h-[5px] w-[5px] rounded-full" style={{ background: "currentColor" }} />
+      {isActive ? "Ativo" : "Arquivado"}
     </span>
   );
 }
