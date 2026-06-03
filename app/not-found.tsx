@@ -42,7 +42,7 @@ export default function NotFound() {
           <Button
             className="w-full"
             size="lg"
-            onClick={() => router.push("/sistema")}
+            onClick={() => router.push("/dashboard")}
           >
             <Home className="mr-2 h-5 w-5" />
             Ir para a Página Principal

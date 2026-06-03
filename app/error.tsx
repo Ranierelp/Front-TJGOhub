@@ -27,7 +27,7 @@ export default function Error({
 
   const handleGoHome = () => {
     // Redireciona para a página principal do sistema ou login
-    router.push("/sistema");
+    router.push("/dashboard");
   };
 
   const handleTryAgain = () => {

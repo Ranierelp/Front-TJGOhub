@@ -3,7 +3,7 @@
 import React from "react";
 import NextLink from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { LogOut, Settings, LayoutDashboard, Menu, X, Bell, Calendar, User } from "lucide-react";
+import { LogOut, LayoutDashboard, Menu, X, Bell, Calendar, User } from "lucide-react";
 import { useState } from "react";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -245,11 +245,6 @@ export const Navbar = () => {
                       Painel Administrativo
                     </DropdownMenuItem>
                   )}
-
-                  <DropdownMenuItem onClick={() => router.push("/dashboard/configuracoes")}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Configurações
-                  </DropdownMenuItem>
 
                   <DropdownMenuSeparator />
 
