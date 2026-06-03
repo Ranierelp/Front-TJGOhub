@@ -94,8 +94,8 @@ export const SelectContent = React.forwardRef<
         "shadow-[0_20px_60px_rgba(0,0,0,0.18)]",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-        "bg-white/98 border border-[rgba(186,210,235,0.7)]",
-        "dark:bg-[rgba(13,19,35,0.99)] dark:border-[rgba(51,65,85,0.7)]",
+        "bg-white border border-[rgba(186,210,235,0.7)]",
+        "dark:bg-[#0D1323] dark:border-[rgba(51,65,85,0.7)]",
         className,
       )}
       {...props}
