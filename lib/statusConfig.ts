@@ -27,16 +27,16 @@ interface StatusStyle {
 
 export const statusConfig: Record<AnyStatus, StatusStyle> = {
   // Resultados de testes
-  PASSED:    { color: "#16a34a", bg: "#dcfce7", label: "Passou",     icon: "✓" },
-  FAILED:    { color: "#dc2626", bg: "#fee2e2", label: "Falhou",     icon: "✕" },
-  FLAKY:     { color: "#ca8a04", bg: "#fef9c3", label: "Flaky",      icon: "◐" },
-  SKIPPED:   { color: "#64748b", bg: "#f1f5f9", label: "Pulado",     icon: "⊘" },
+  PASSED:    { color: "var(--success-fg)", bg: "var(--success-bg)", label: "Passou",     icon: "✓" },
+  FAILED:    { color: "var(--danger-fg)",  bg: "var(--danger-bg)",  label: "Falhou",     icon: "✕" },
+  FLAKY:     { color: "var(--flaky-fg)",   bg: "var(--flaky-bg)",   label: "Flaky",      icon: "◐" },
+  SKIPPED:   { color: "var(--skipped-fg)", bg: "var(--skipped-bg)", label: "Pulado",     icon: "⊘" },
 
   // Status de execucao
-  COMPLETED: { color: "#16a34a", bg: "#dcfce7", label: "Concluido",  icon: "✓" },
-  RUNNING:   { color: "#7c3aed", bg: "#f5f3ff", label: "Executando", icon: "↻" },
-  PENDING:   { color: "#2563eb", bg: "#eff6ff", label: "Pendente",   icon: "○" },
-  CANCELLED: { color: "#6b7280", bg: "#f3f4f6", label: "Cancelado",  icon: "⊗" },
+  COMPLETED: { color: "var(--success-fg)", bg: "var(--success-bg)", label: "Concluído",  icon: "✓" },
+  RUNNING:   { color: "var(--running-fg)", bg: "var(--running-bg)", label: "Executando", icon: "↻" },
+  PENDING:   { color: "var(--pending-fg)", bg: "var(--pending-bg)", label: "Pendente",   icon: "○" },
+  CANCELLED: { color: "var(--skipped-fg)", bg: "var(--skipped-bg)", label: "Cancelado",  icon: "⊗" },
 };
 
 // Retorna o estilo de um status (com fallback seguro para status desconhecidos)
