@@ -74,16 +74,16 @@ export interface TestCase {
 
 // Status: dot + label compatíveis com as 3 opções do backend
 const STATUS_META: Record<TestCase["status"], { label: string; dot: string; bg: string; fg: string }> = {
-  ACTIVE:     { label: "Ativo",      dot: "#10B981", bg: "var(--success-bg)", fg: "var(--success-fg)" },
-  DRAFT:      { label: "Rascunho",   dot: "#F59E0B", bg: "rgba(245,158,11,0.12)", fg: "#92400E" },
-  DEPRECATED: { label: "Depreciado", dot: "#EF4444", bg: "rgba(239,68,68,0.12)",  fg: "#991B1B" },
+  ACTIVE:     { label: "Ativo",      dot: "var(--success-fg)", bg: "var(--success-bg)", fg: "var(--success-fg)" },
+  DRAFT:      { label: "Rascunho",   dot: "var(--warning-fg)", bg: "var(--warning-bg)", fg: "var(--warning-fg)" },
+  DEPRECATED: { label: "Depreciado", dot: "var(--danger-fg)",  bg: "var(--danger-bg)",  fg: "var(--danger-fg)"  },
 };
 
-const PRIORITY_LABELS: Record<Priority, string> = {
-  CRITICAL: "Crítica",
-  HIGH:     "Alta",
-  MEDIUM:   "Média",
-  LOW:      "Baixa",
+const PRIORITY_STYLE: Record<Priority, { label: string; bg: string; fg: string }> = {
+  CRITICAL: { label: "Crítica", bg: "var(--critical-bg)", fg: "var(--critical-fg)" },
+  HIGH:     { label: "Alta",    bg: "var(--high-bg)",     fg: "var(--high-fg)"     },
+  MEDIUM:   { label: "Média",   bg: "var(--medium-bg)",   fg: "var(--medium-fg)"   },
+  LOW:      { label: "Baixa",   bg: "var(--low-bg)",      fg: "var(--low-fg)"      },
 };
 
 // Hash determinístico nome → cor para o módulo (consistente entre sessões)
@@ -143,6 +143,7 @@ export function CaseViewMode({ caso, onEdit, onDelete, deleting }: Props) {
   };
 
   const status      = STATUS_META[caso.status];
+  const priority    = PRIORITY_STYLE[caso.priority];
   const modColor    = caso.module ? moduleColor(caso.module) : null;
   const responsavel = caso.assigned_to_name || "";
 
@@ -204,10 +205,10 @@ export function CaseViewMode({ caso, onEdit, onDelete, deleting }: Props) {
               </span>
               <span
                 className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-[3px] text-[11px] font-bold"
-                style={{ background: "color-mix(in oklab, var(--danger-fg) 18%, transparent)", color: "var(--danger-fg)" }}
+                style={{ background: priority.bg, color: priority.fg }}
               >
                 <span className="h-1.5 w-1.5 rounded-full" style={{ background: "currentColor" }} />
-                {PRIORITY_LABELS[caso.priority]}
+                {priority.label}
               </span>
             </div>
 

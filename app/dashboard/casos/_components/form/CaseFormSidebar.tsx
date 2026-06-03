@@ -26,12 +26,7 @@ import {
   FLabel,
   ErrMsg,
 } from "@/app/dashboard/casos/_components/CaseShared";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 import { TagSelector } from "./TagSelector";
 import {
@@ -107,6 +102,11 @@ export function CaseFormSidebar<T extends FieldValues & CaseFormBaseData>({
   const curPriority = w("priority");
   const curAssigned = (w("assigned_to") ?? "") as string;
 
+  const assigneeOptions = [
+    { value: NO_ASSIGNEE, label: "Não atribuído" },
+    ...users.map(u => ({ value: u.id, label: userLabel(u) })),
+  ];
+
   return (
     <div className="w-[340px] flex-shrink-0 space-y-5">
 
@@ -149,11 +149,11 @@ export function CaseFormSidebar<T extends FieldValues & CaseFormBaseData>({
               onClick={() => setField("status", opt.value)}
               className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl text-xs font-semibold transition-all"
               style={{
-                background: curStatus === opt.value ? opt.g : "rgba(248,250,252,0.6)",
-                color:      curStatus === opt.value ? opt.t : "#94A3B8",
-                border:     curStatus === opt.value ? `1.5px solid ${opt.b}30` : "1.5px solid rgba(226,232,240,0.5)",
+                background: curStatus === opt.value ? opt.bg    : "var(--glass-field-bg)",
+                color:      curStatus === opt.value ? opt.color : "var(--col-dim)",
+                border:     curStatus === opt.value ? `1.5px solid ${opt.border}` : "1.5px solid var(--glass-inner-border)",
                 transform:  curStatus === opt.value ? "scale(1.03)" : "scale(1)",
-                boxShadow:  curStatus === opt.value ? `0 2px 8px ${opt.b}20` : "none",
+                boxShadow:  "none",
               }}>
               <span className="text-lg">{opt.emoji}</span>
               {opt.label}
@@ -171,11 +171,11 @@ export function CaseFormSidebar<T extends FieldValues & CaseFormBaseData>({
               onClick={() => setField("priority", opt.value)}
               className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl text-xs font-semibold transition-all"
               style={{
-                background: curPriority === opt.value ? opt.g : "rgba(248,250,252,0.6)",
-                color:      curPriority === opt.value ? opt.t : "#94A3B8",
-                border:     curPriority === opt.value ? `1.5px solid ${opt.b}30` : "1.5px solid rgba(226,232,240,0.5)",
+                background: curPriority === opt.value ? opt.bg    : "var(--glass-field-bg)",
+                color:      curPriority === opt.value ? opt.color : "var(--col-dim)",
+                border:     curPriority === opt.value ? `1.5px solid ${opt.border}` : "1.5px solid var(--glass-inner-border)",
                 transform:  curPriority === opt.value ? "scale(1.03)" : "scale(1)",
-                boxShadow:  curPriority === opt.value ? `0 2px 8px ${opt.b}20` : "none",
+                boxShadow:  "none",
               }}>
               <span className="text-lg">{opt.emoji}</span>
               {opt.label}
@@ -184,21 +184,18 @@ export function CaseFormSidebar<T extends FieldValues & CaseFormBaseData>({
         </div>
       </GlassCard>
 
-      {/* ── Responsável (Radix Select; vazio = não atribuído) ── */}
+      {/* ── Responsável (SearchableSelect; vazio = não atribuído) ── */}
       <GlassCard className="p-5">
         <SLabel emoji="👤">Responsável</SLabel>
-        <Select
+        <SearchableSelect
           value={curAssigned || NO_ASSIGNEE}
           onValueChange={(v) => setField("assigned_to", v === NO_ASSIGNEE ? "" : v)}
-        >
-          <SelectTrigger className="w-full" />
-          <SelectContent>
-            <SelectItem value={NO_ASSIGNEE}>Não atribuído</SelectItem>
-            {users.map(u => (
-              <SelectItem key={u.id} value={u.id}>{userLabel(u)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          options={assigneeOptions}
+          searchPlaceholder="Buscar responsável..."
+          emptyMessage="Nenhum usuário encontrado"
+          triggerClassName="w-full"
+          contentWidth={300}
+        />
       </GlassCard>
 
       {/* ── Tags ── */}

@@ -311,7 +311,7 @@ export function CaseEditForm({ caso, onCancel, onSaved }: Props) {
             <button type="button" onClick={onCancel}
               className="px-4 py-2 rounded-xl text-sm font-medium transition-all"
               style={{ color: "var(--col-muted)", background: "var(--glass-field-bg)", border: "1px solid var(--glass-inner-border)" }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(241,245,249,1)"; }}
+              onMouseEnter={e => { e.currentTarget.style.background = "var(--glass-card-bg)"; }}
               onMouseLeave={e => { e.currentTarget.style.background = "var(--glass-field-bg)"; }}>
               Cancelar
             </button>
@@ -366,9 +366,9 @@ export function CaseEditForm({ caso, onCancel, onSaved }: Props) {
               </div>
               <button type="button" onClick={addStep}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all"
-                style={{ background: "rgba(219,234,254,0.4)", color: "#2563EB", border: "1.5px dashed rgba(59,130,246,0.3)" }}
-                onMouseEnter={e => { e.currentTarget.style.background = "rgba(219,234,254,0.8)"; e.currentTarget.style.borderColor = "#3B82F6"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "rgba(219,234,254,0.4)"; e.currentTarget.style.borderColor = "rgba(59,130,246,0.3)"; }}>
+                style={{ background: "var(--brand-bg)", color: "var(--brand-fg)", border: "1.5px dashed var(--brand-solid)" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "var(--brand-glow)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "var(--brand-bg)"; }}>
                 <Plus className="h-3.5 w-3.5" /> Novo Passo
               </button>
             </div>

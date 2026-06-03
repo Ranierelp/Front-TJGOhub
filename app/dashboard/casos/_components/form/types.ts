@@ -30,17 +30,17 @@ export type CaseFormBaseData = z.infer<typeof caseFormBaseSchema>;
 
 // Opções de Status — paleta visual mantida entre criar/editar
 export const STATUS_OPTS = [
-  { value: "DRAFT"      as const, label: "Rascunho",   emoji: "✏️", g: "linear-gradient(135deg,#FEF3C7,#FDE68A)", b: "#F59E0B", t: "#92400E" },
-  { value: "ACTIVE"     as const, label: "Ativo",      emoji: "⚡", g: "linear-gradient(135deg,#D1FAE5,#A7F3D0)", b: "#10B981", t: "#065F46" },
-  { value: "DEPRECATED" as const, label: "Depreciado", emoji: "📦", g: "linear-gradient(135deg,#FEE2E2,#FECACA)", b: "#EF4444", t: "#991B1B" },
+  { value: "DRAFT"      as const, label: "Rascunho",   emoji: "✏️", bg: "var(--warning-bg)",  border: "var(--warning-fg)",  color: "var(--warning-fg)"  },
+  { value: "ACTIVE"     as const, label: "Ativo",      emoji: "⚡", bg: "var(--success-bg)",  border: "var(--success-fg)",  color: "var(--success-fg)"  },
+  { value: "DEPRECATED" as const, label: "Depreciado", emoji: "📦", bg: "var(--danger-bg)",   border: "var(--danger-fg)",   color: "var(--danger-fg)"   },
 ];
 
 // Opções de Prioridade — alinhada com a paleta do KanbanCard
 export const PRIORITY_OPTS = [
-  { value: "CRITICAL" as const, label: "Crítica", emoji: "🔥", g: "linear-gradient(135deg,#FEE2E2,#FECACA)", b: "#DC2626", t: "#991B1B" },
-  { value: "HIGH"     as const, label: "Alta",    emoji: "⚡", g: "linear-gradient(135deg,#FFEDD5,#FED7AA)", b: "#EA580C", t: "#9A3412" },
-  { value: "MEDIUM"   as const, label: "Média",   emoji: "●",  g: "linear-gradient(135deg,#DBEAFE,#BFDBFE)", b: "#2563EB", t: "#1D4ED8" },
-  { value: "LOW"      as const, label: "Baixa",   emoji: "↓",  g: "linear-gradient(135deg,#F1F5F9,#E2E8F0)", b: "#94A3B8", t: "#475569" },
+  { value: "CRITICAL" as const, label: "Crítica", emoji: "🔥", bg: "var(--critical-bg)", border: "var(--critical-fg)", color: "var(--critical-fg)" },
+  { value: "HIGH"     as const, label: "Alta",    emoji: "⚡", bg: "var(--high-bg)",     border: "var(--high-fg)",     color: "var(--high-fg)"     },
+  { value: "MEDIUM"   as const, label: "Média",   emoji: "●",  bg: "var(--medium-bg)",   border: "var(--medium-fg)",   color: "var(--medium-fg)"   },
+  { value: "LOW"      as const, label: "Baixa",   emoji: "↓",  bg: "var(--low-bg)",      border: "var(--low-fg)",      color: "var(--low-fg)"      },
 ];
 
 // Nome amigável do usuário pra mostrar no select de Responsável

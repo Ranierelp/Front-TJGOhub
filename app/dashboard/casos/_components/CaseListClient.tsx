@@ -13,9 +13,9 @@ import { GlassCard, CasePageBackground } from "@/app/dashboard/casos/_components
 
 // ── Configuração visual dos status ─────────────────────────────────────────
 const STATUS = {
-  DRAFT:      { label: "Rascunho",   bg: "linear-gradient(135deg,#FEF3C7,#FDE68A)", color: "#92400E" },
-  ACTIVE:     { label: "Ativo",      bg: "linear-gradient(135deg,#D1FAE5,#A7F3D0)", color: "#065F46" },
-  DEPRECATED: { label: "Depreciado", bg: "linear-gradient(135deg,#FEE2E2,#FECACA)", color: "#991B1B" },
+  DRAFT:      { label: "Rascunho",   bg: "var(--warning-bg)", color: "var(--warning-fg)" },
+  ACTIVE:     { label: "Ativo",      bg: "var(--success-bg)", color: "var(--success-fg)" },
+  DEPRECATED: { label: "Depreciado", bg: "var(--danger-bg)",  color: "var(--danger-fg)"  },
 } as const;
 
 // Colunas: ID | Título | Projeto | Status | Tags | Excluir

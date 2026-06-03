@@ -57,24 +57,18 @@ export function useCreateCase(): UseCreateCaseReturn {
   useEffect(() => {
     const load = async () => {
       try {
-        const [projResp, tagsResp] = await Promise.all([
+        const [projResp, tagsResp, usersResp] = await Promise.all([
           get<DRFList<ApiProject>>(api.endpoints.projects),
           get<DRFList<ApiTag>>(api.endpoints.tags),
+          get<ApiUser[]>(api.endpoints.usersAssignable),
         ]);
         setProjects(projResp.data.results);
         setTags(tagsResp.data.results);
+        setUsers(usersResp.data);
       } catch {
         toast.error("Erro ao carregar dados do formulário");
       } finally {
         setLoading(false);
-      }
-
-      // Usuários: endpoint admin-only. QA/Visualizador não têm acesso — ignora silenciosamente.
-      try {
-        const usersResp = await get<DRFList<ApiUser>>(api.endpoints.users);
-        setUsers(usersResp.data.results);
-      } catch {
-        // sem acesso ao endpoint de usuários — campo de responsável fica vazio
       }
     };
     load();
