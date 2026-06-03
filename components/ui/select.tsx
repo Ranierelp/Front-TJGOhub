@@ -94,13 +94,10 @@ export const SelectContent = React.forwardRef<
         "shadow-[0_20px_60px_rgba(0,0,0,0.18)]",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+        "bg-white/98 border border-[rgba(186,210,235,0.7)]",
+        "dark:bg-[rgba(13,19,35,0.99)] dark:border-[rgba(51,65,85,0.7)]",
         className,
       )}
-      style={{
-        background: "var(--glass-card-bg)",
-        backdropFilter: "blur(24px)",
-        border: "1px solid var(--glass-card-border)",
-      }}
       {...props}
     >
       <RadixSelect.Viewport className="p-1.5">
@@ -121,12 +118,14 @@ export const SelectItem = React.forwardRef<
     className={cn(
       "relative flex w-full cursor-pointer select-none items-center",
       "rounded-lg px-3 py-2 pr-8 text-sm outline-none transition-colors",
+      "text-[color:var(--col-body)]",
       "data-[highlighted]:bg-blue-50 data-[highlighted]:text-blue-700",
+      "dark:data-[highlighted]:bg-blue-500/15 dark:data-[highlighted]:text-blue-300",
       "data-[state=checked]:font-semibold data-[state=checked]:text-blue-700",
+      "dark:data-[state=checked]:text-blue-300",
       "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className,
     )}
-    style={{ color: "var(--col-body)" }}
     {...props}
   >
     <RadixSelect.ItemText>{children}</RadixSelect.ItemText>
