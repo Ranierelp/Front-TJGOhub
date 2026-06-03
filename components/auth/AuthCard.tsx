@@ -50,8 +50,8 @@ export function AuthCard({ subtitle, children, footer, wide = false }: AuthCardP
 
       {/* Card branco com sombra forte — animate-slide-up vem do globals.css */}
       <div
-        className={`relative bg-white rounded-2xl overflow-hidden w-full animate-slide-up ${wide ? "max-w-[460px]" : "max-w-[420px]"}`}
-        style={{ boxShadow: "0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15)" }}
+        className={`relative bg-white text-gray-900 rounded-2xl overflow-hidden w-full animate-slide-up ${wide ? "max-w-[460px]" : "max-w-[420px]"}`}
+        style={{ boxShadow: "0 25px 60px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15)", colorScheme: "light" }}
       >
         {/* Header do card — gradiente azul igual ao .card-header do Django */}
         <div

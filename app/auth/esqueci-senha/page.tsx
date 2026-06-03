@@ -60,7 +60,7 @@ export default function EsqueciSenhaPage() {
                 autoComplete="email"
                 disabled={isLoading}
                 id="email"
-                placeholder="seu.email@instituicao.com.br"
+                placeholder="usuario@tjgo.jus.br"
                 startContent={<Mail className="h-4 w-4 text-gray-400" />}
                 type="email"
                 value={email}
