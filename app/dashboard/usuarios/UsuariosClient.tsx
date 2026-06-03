@@ -19,9 +19,9 @@ import { ChangeProfileDialog } from "./_components/ChangeProfileDialog";
 import { DeleteUserDialog } from "./_components/DeleteUserDialog";
 import type { ApiUser } from "@/lib/api/users";
 
-const GROUP_VARIANT: Record<string, "default" | "success" | "secondary" | "outline"> = {
+const GROUP_VARIANT: Record<string, "default" | "success" | "secondary" | "outline" | "purple"> = {
   Admin: "default",
-  QA: "success",
+  QA: "purple",
   Visualizador: "secondary",
 };
 
@@ -72,9 +72,15 @@ function UserRow({
 
       {/* Status */}
       <td className="px-4 py-3">
-        {user.is_active
-          ? <Badge variant="success"><span className="w-1.5 h-1.5 rounded-full bg-current" />Ativo</Badge>
-          : <Badge variant="destructive"><span className="w-1.5 h-1.5 rounded-full bg-current" />Inativo</Badge>}
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md"
+          style={{
+            background: user.is_active ? "var(--success-bg)"     : "var(--danger-bg)",
+            color:      user.is_active ? "var(--success-fg)"     : "var(--danger-fg)",
+            border:     `1px solid ${user.is_active ? "var(--success-border)" : "var(--danger-border)"}`,
+          }}>
+          <span className="h-[5px] w-[5px] rounded-full" style={{ background: "currentColor" }} />
+          {user.is_active ? "Ativo" : "Inativo"}
+        </span>
       </td>
 
       {/* Ações */}
@@ -94,7 +100,7 @@ function UserRow({
               className="text-destructive focus:text-destructive"
               onClick={() => onDelete(user)}
             >
-              <Trash2 className="mr-2 h-4 w-4" />Excluir
+              <Trash2 className="mr-2 h-4 w-4" />Inativar
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -151,7 +157,7 @@ export default function UsuariosClient() {
   const handleDelete = async (id: string) => {
     const user = users.find((u) => u.id === id);
     await deleteUser(id);
-    toast.success(`${user?.first_name ?? "Usuário"} foi excluído.`);
+    toast.success(`${user?.first_name ?? "Usuário"} foi inativado.`);
   };
 
   const isEmpty = !isLoading && !error && users.length === 0 && !search;
