@@ -13,11 +13,11 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
-const GROUP_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline" | "success" | "warning"> = {
+const GROUP_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline" | "success" | "warning" | "purple"> = {
   admin:        "default",
   Admin:        "default",
-  qa:           "success",
-  QA:           "success",
+  qa:           "purple",
+  QA:           "purple",
   visualizador: "secondary",
   Visualizador: "secondary",
 };
@@ -44,7 +44,8 @@ export default function PerfilClient() {
     try {
       const res = await updateMe({ first_name: firstName, last_name: lastName });
       // Usa a resposta real do servidor — fonte da verdade
-      if (res.data) setUser(mapApiUserToUser(res.data));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (res.data) setUser(mapApiUserToUser(res.data as any));
       toast.success("Dados atualizados com sucesso.");
     } catch {
       toast.error("Erro ao salvar. Tente novamente.");
