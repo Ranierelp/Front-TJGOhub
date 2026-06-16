@@ -1,16 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { Camera } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthStore, mapApiUserToUser } from "@/stores/authStore";
-import { updateMe } from "@/lib/api/users";
+import { updateMe, uploadMeAvatar } from "@/lib/api/users";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
 const GROUP_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline" | "success" | "warning" | "purple"> = {
@@ -26,9 +27,25 @@ export default function PerfilClient() {
   const { user } = useAuth();
   const setUser = useAuthStore((s) => s.setUser);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [firstName, setFirstName] = useState(user?.firstName ?? "");
   const [lastName, setLastName] = useState(user?.lastName ?? "");
   const [savingInfo, setSavingInfo] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const handleAvatarChange = async (file: File) => {
+    setUploadingAvatar(true);
+    try {
+      const res = await uploadMeAvatar(file);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (res.data) setUser(mapApiUserToUser(res.data as any));
+      toast.success("Foto de perfil atualizada.");
+    } catch {
+      toast.error("Erro ao enviar a foto.");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const initials = [user?.firstName?.[0], user?.lastName?.[0]]
     .filter(Boolean)
@@ -70,11 +87,30 @@ export default function PerfilClient() {
       {/* Card: Informações da Conta */}
       <Card className="mb-4">
         <CardContent className="pt-6 flex items-center gap-5">
-          <Avatar className="h-[72px] w-[72px] text-2xl font-bold bg-blue-600 text-white flex-shrink-0">
-            <AvatarFallback className="bg-blue-600 text-white text-2xl font-bold">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
+          <div
+            className="relative flex-shrink-0 cursor-pointer group"
+            onClick={() => !uploadingAvatar && fileInputRef.current?.click()}
+            title="Clique para alterar a foto"
+          >
+            <Avatar className="h-[72px] w-[72px]">
+              {user?.avatar && <AvatarImage src={user.avatar} alt="Avatar" />}
+              <AvatarFallback className="bg-blue-600 text-white text-2xl font-bold">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              {uploadingAvatar
+                ? <div className="h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                : <Camera className="h-5 w-5 text-white" />}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={e => { const f = e.target.files?.[0]; if (f) handleAvatarChange(f); e.target.value = ""; }}
+            />
+          </div>
           <div className="min-w-0">
             <p className="text-xl font-bold text-foreground tracking-tight">
               {[user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email}

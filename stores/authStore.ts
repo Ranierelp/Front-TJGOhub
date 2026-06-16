@@ -140,10 +140,7 @@ interface ApiUserResponse {
   is_active: boolean;
   is_staff: boolean;
   is_superuser: boolean;
-  profile?: {
-    name: string;
-    avatar?: string;
-  };
+  avatar?: string | null;
   groups?: { id: number; name: string }[];
 }
 
@@ -176,12 +173,10 @@ export function mapApiUserToUser(apiUser: ApiUserResponse): User {
     id: apiUser.id || String(apiUser.pkid),
     username: apiUser.username || apiUser.email,
     email: apiUser.email,
-    // Optional chaining (?.) — não quebra se profile for undefined
-    // É como getattr(obj, 'attr', None) no Python
-    firstName: apiUser.first_name || apiUser.profile?.name?.split(" ")[0] || "",
-    lastName: apiUser.last_name || apiUser.profile?.name?.split(" ").slice(1).join(" ") || "",
+    firstName: apiUser.first_name || "",
+    lastName: apiUser.last_name || "",
     roles,
-    avatar: apiUser.profile?.avatar,
+    avatar: apiUser.avatar ?? undefined,
     isActive: apiUser.is_active,
   };
 }

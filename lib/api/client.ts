@@ -73,8 +73,13 @@ const createApiClient = (): AxiosInstance => {
   const client = axios.create({
     baseURL,
     timeout,
+    // NÃO fixamos "Content-Type" aqui de propósito.
+    // O Axios detecta o tipo do corpo sozinho e define o header certo:
+    //   • objeto comum  → "application/json"
+    //   • FormData      → "multipart/form-data; boundary=..." (com o boundary!)
+    // Se forçássemos "application/json", o Axios converteria o FormData de
+    // upload para JSON e o Django rejeitaria o arquivo ("não é um arquivo").
     headers: {
-      "Content-Type": "application/json",
       Accept: "application/json",
     },
   });

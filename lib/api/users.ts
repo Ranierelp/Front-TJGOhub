@@ -16,6 +16,7 @@ export interface ApiUser {
   is_active: boolean;
   is_staff: boolean;
   is_superuser: boolean;
+  avatar?: string | null;
   groups: Group[];
   created_at?: string;
   date_joined?: string;
@@ -71,6 +72,12 @@ export interface UpdateMePayload {
 
 export const updateMe = (data: UpdateMePayload) =>
   patch<ApiUser>(api.endpoints.me, data);
+
+export const uploadMeAvatar = (file: File) => {
+  const formData = new FormData();
+  formData.append("avatar", file);
+  return patch<ApiUser>(api.endpoints.me, formData);
+};
 
 export const deleteUser = (id: string) =>
   del(`${api.endpoints.users}${id}/`);
