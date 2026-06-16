@@ -1,7 +1,10 @@
 // Server Component — wrapper da pagina de detalhe de uma execucao.
 // Next.js 15: params e uma Promise em server components (precisa de await).
 
+import { Metadata } from "next";
 import { RunDetailClient } from "./_components/RunDetailClient";
+
+export const metadata: Metadata = { title: "Detalhes da Execução" };
 
 export default async function ExecucaoDetalhePage({
   params,

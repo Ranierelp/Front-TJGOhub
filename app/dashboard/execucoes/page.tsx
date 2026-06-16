@@ -1,7 +1,10 @@
 // Server Component — wrapper da pagina de listagem de execucoes.
 // Toda a logica interativa esta no RunsClient (Client Component).
 
+import { Metadata } from "next";
 import { RunsClient } from "./_components/RunsClient";
+
+export const metadata: Metadata = { title: "Execuções" };
 
 export default function ExecucoesPage() {
   return (

@@ -29,7 +29,10 @@
 // No Passo 3, vamos usar esse id para buscar o caso correto na API:
 //   GET /api/v1/test-cases/{id}/
 // =============================================================================
+import { Metadata } from "next";
 import { CaseDetailClient } from "./_components/CaseDetailClient";
+
+export const metadata: Metadata = { title: "Detalhes do Caso" };
 
 // Next.js 15: params é uma Promise em server components (precisa de await).
 export default async function CasoDetalhePage({

@@ -1,6 +1,9 @@
 // Server Component — apenas renderiza o formulário client-side.
 // A lógica (fetch de projetos/tags, submit, upload) fica no CreateCaseClient.
+import { Metadata } from "next";
 import { CreateCaseClient } from "./_components/CreateCaseClient";
+
+export const metadata: Metadata = { title: "Novo Caso" };
 
 export default function NovoCasoPage() {
   return (

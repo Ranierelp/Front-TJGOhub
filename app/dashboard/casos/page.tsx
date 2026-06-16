@@ -1,4 +1,7 @@
+import { Metadata } from "next";
 import { CaseListClient } from "./_components/CaseListClient";
+
+export const metadata: Metadata = { title: "Casos" };
 
 export default function CasosPage() {
   return (
