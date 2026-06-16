@@ -1,9 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Trash2, ImagePlus, X } from "lucide-react";
 import Zoom from "react-medium-image-zoom";
-import "react-medium-image-zoom/dist/styles.css";
 import type { PendingStep } from "@/hooks/useCreateCase";
 
 interface Props {
@@ -14,7 +13,8 @@ interface Props {
 }
 
 export function StepCard({ step, index, onUpdate, onRemove }: Props) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef     = useRef<HTMLInputElement>(null);
+  const isHoveredRef = useRef(false); // ref para o listener de paste (sem causar re-render)
   const [hovered, setHovered] = useState(false);
 
   // FileReader gera uma data URL (base64) — sempre válida, sem problemas de CSP
@@ -37,6 +37,32 @@ export function StepCard({ step, index, onUpdate, onRemove }: Props) {
     if (file?.type.startsWith("image/")) setImage(file);
   };
 
+  // Ctrl+V cola imagem do clipboard no passo que está com o mouse em cima.
+  // Cada card registra seu próprio listener, mas só o que está hovered reage.
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      if (!isHoveredRef.current) return;
+      // Não intercepta se o foco está num campo de texto (ex: descrição do passo)
+      const active = document.activeElement;
+      if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) return;
+      // Não substitui imagem já existente
+      if (step.preview) return;
+
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) setImage(file);
+          break;
+        }
+      }
+    };
+
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, [step, index]); // re-registra quando step/index mudam para fechar sobre os valores atuais
+
   return (
     <div
       className="rounded-2xl overflow-hidden"
@@ -48,8 +74,8 @@ export function StepCard({ step, index, onUpdate, onRemove }: Props) {
         boxShadow:            "var(--glass-shadow)",
         transition: "border-color 0.3s",
       }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseEnter={() => { setHovered(true);  isHoveredRef.current = true;  }}
+      onMouseLeave={() => { setHovered(false); isHoveredRef.current = false; }}
     >
       {/* Cabeçalho do passo */}
       <div className="flex items-center gap-3 px-5 py-3.5" style={{
@@ -120,7 +146,7 @@ export function StepCard({ step, index, onUpdate, onRemove }: Props) {
               <ImagePlus className="h-5 w-5" />
             </div>
             <p className="text-sm font-medium" style={{ color: "var(--col-muted)" }}>
-              Arraste imagens aqui ou{" "}
+              Arraste, <span className="font-bold" style={{ color: "#2563EB" }}>Ctrl+V</span> ou{" "}
               <span className="font-bold" style={{ color: "#2563EB" }}>clique para selecionar</span>
             </p>
             <p className="text-xs mt-1.5" style={{ color: "var(--col-dim)" }}>PNG, JPG, GIF • até 5MB</p>
