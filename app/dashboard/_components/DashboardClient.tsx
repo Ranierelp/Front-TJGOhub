@@ -126,7 +126,7 @@ export function DashboardClient() {
       {loading && (
         <div className="flex flex-col items-center justify-center py-24 gap-3">
           <Spinner size="lg" />
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-muted-foreground">
             {selectedProject
               ? `Carregando dados de "${selectedProject.name}"...`
               : "Carregando dados..."}

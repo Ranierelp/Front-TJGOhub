@@ -188,8 +188,8 @@ function ScreenshotPlaceholder({ tag }: { tag: string }) {
         <span className="h-2 w-2 rounded-full bg-amber-500" />
         <span className="h-2 w-2 rounded-full bg-emerald-500" />
         <span
-          className="ml-2 flex-1 rounded border bg-white px-2 py-[2px] font-mono text-[10px]"
-          style={{ borderColor: "var(--glass-card-border)", color: "var(--col-dim)" }}
+          className="ml-2 flex-1 rounded border px-2 py-[2px] font-mono text-[10px]"
+          style={{ background: "var(--glass-field-bg)", borderColor: "var(--glass-card-border)", color: "var(--col-dim)" }}
         >
           {tag}
         </span>

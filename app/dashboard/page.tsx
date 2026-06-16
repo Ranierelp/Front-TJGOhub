@@ -34,8 +34,8 @@ export default function DashboardPage() {
 
       {/* Título da página — renderizado no servidor (sem fetch) */}
       <div>
-        <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Visão geral das execuções de teste</p>
+        <h1 className="text-xl font-bold text-foreground">Dashboard</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Visão geral das execuções de teste</p>
       </div>
 
       {/* DashboardClient: Client Component que busca os dados reais da API */}
