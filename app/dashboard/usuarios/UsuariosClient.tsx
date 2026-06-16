@@ -40,7 +40,7 @@ function UserRow({
   onChangeProfile: (u: ApiUser) => void;
   onDelete: (u: ApiUser) => void;
 }) {
-  const group = user.groups[0]?.name ?? null;
+  const group = user.is_superuser ? "Admin" : (user.groups[0]?.name ?? null);
 
   return (
     <tr className="border-b border-border hover:bg-muted/40 transition-colors">

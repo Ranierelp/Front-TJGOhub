@@ -36,7 +36,7 @@ export default function PerfilClient() {
     .toUpperCase() || user?.email?.[0]?.toUpperCase() || "U";
 
   const groupName = user?.roles?.find(
-    (r) => r !== "admin" && r !== "staff" && r !== "user",
+    (r) => r !== "staff" && r !== "user",
   );
 
   const handleSaveInfo = async () => {
