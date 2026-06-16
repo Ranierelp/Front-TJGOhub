@@ -26,6 +26,7 @@ export interface KanbanCard {
   assigned_to_id: string | null;
   assigned_to_name: string | null;
   assigned_to_initials: string | null;
+  assigned_to_avatar: string | null;
 }
 
 // Coluna do board com os cards já aninhados — resposta do GET /kanban/board/

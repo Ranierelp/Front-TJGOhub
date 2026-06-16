@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -48,6 +48,7 @@ function UserRow({
       <td className="px-4 py-3">
         <div className="flex items-center gap-2.5">
           <Avatar className="h-9 w-9 flex-shrink-0">
+            {user.avatar && <AvatarImage src={user.avatar} alt={getInitials(user)} />}
             <AvatarFallback className="bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 text-xs font-bold">
               {getInitials(user)}
             </AvatarFallback>

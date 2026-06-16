@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   fetchCaseHistory,
   isTagsChange,
@@ -124,27 +125,31 @@ function bucketOf(iso: string): Bucket {
 // =============================================================================
 
 /**
- * Avatar com gradient azul institucional. Usa iniciais sempre — não tenta
- * resolver foto pra não introduzir mais um endpoint. Quando o autor é null
- * (caso legado), mostra "?".
+ * Avatar do autor. Mostra a foto quando houver; senão cai no gradient azul
+ * institucional com as iniciais. Quando o autor é null (caso legado), mostra "?".
+ * O Radix exibe o fallback automaticamente se a imagem falhar ao carregar.
  */
 function AuthorAvatar({ author, size = 28 }: { author: HistoryAuthor | null; size?: number }) {
   return (
-    <span
-      className="inline-flex flex-shrink-0 items-center justify-center rounded-full font-bold text-white shadow-[inset_0_0_0_1.5px_rgba(255,255,255,0.18)]"
-      style={{
-        width: size,
-        height: size,
-        fontSize: size * 0.4,
-        background: author
-          ? 'linear-gradient(135deg, #2563EB, #3B82F6)'
-          : 'var(--col-divider)',
-        color: author ? '#fff' : 'var(--col-dim)',
-      }}
+    <Avatar
+      className="flex-shrink-0 shadow-[inset_0_0_0_1.5px_rgba(255,255,255,0.18)]"
+      style={{ width: size, height: size }}
       aria-hidden
     >
-      {author?.initials ?? '?'}
-    </span>
+      {author?.avatar && <AvatarImage src={author.avatar} alt={author.name} />}
+      <AvatarFallback
+        className="font-bold"
+        style={{
+          fontSize: size * 0.4,
+          background: author
+            ? 'linear-gradient(135deg, #2563EB, #3B82F6)'
+            : 'var(--col-divider)',
+          color: author ? '#fff' : 'var(--col-dim)',
+        }}
+      >
+        {author?.initials ?? '?'}
+      </AvatarFallback>
+    </Avatar>
   );
 }
 

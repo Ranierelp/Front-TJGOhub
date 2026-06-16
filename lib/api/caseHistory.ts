@@ -13,9 +13,10 @@ import { get, api } from "./index";
 // ── Tipos ────────────────────────────────────────────────────────────────────
 
 export interface HistoryAuthor {
-  id:       string;   // UUID
-  name:     string;   // nome completo ou email
-  initials: string;   // ex.: "RP"
+  id:       string;          // UUID
+  name:     string;          // nome completo ou email
+  initials: string;          // ex.: "RP"
+  avatar:   string | null;   // URL absoluta da foto, ou null
 }
 
 // Mudança em campo simples (status/prioridade/título/etc.)

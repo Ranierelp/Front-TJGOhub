@@ -3,6 +3,7 @@
 import { useRef }      from "react";
 import { useRouter }   from "next/navigation";
 import { Draggable }   from "@hello-pangea/dnd";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { KanbanCard as KanbanCardType } from "@/lib/types/kanban";
 
 // Distância mínima (px) entre mousedown e mouseup para considerar que houve drag.
@@ -131,13 +132,26 @@ export function KanbanCard({ card, index }: Props) {
           <div className="flex items-center justify-between gap-2">
             {card.assigned_to_id ? (
               <div className="flex min-w-0 items-center gap-1.5">
-                <div
-                  className="inline-flex shrink-0 items-center justify-center rounded-full font-bold text-white"
-                  style={{ width: 22, height: 22, fontSize: 9, background: avatarColor(card.assigned_to_id) }}
+                <Avatar
+                  className="h-[22px] w-[22px] shrink-0"
                   title={card.assigned_to_name ?? undefined}
                 >
-                  {card.assigned_to_initials}
-                </div>
+                  {card.assigned_to_avatar && (
+                    <AvatarImage
+                      src={card.assigned_to_avatar}
+                      alt={card.assigned_to_name ?? ""}
+                    />
+                  )}
+                  {/* Fallback: iniciais sobre a cor determinística (gerada do ID).
+                      O Radix mostra isto automaticamente se não houver foto ou
+                      se a imagem falhar ao carregar. */}
+                  <AvatarFallback
+                    className="font-bold text-white"
+                    style={{ fontSize: 9, background: avatarColor(card.assigned_to_id) }}
+                  >
+                    {card.assigned_to_initials}
+                  </AvatarFallback>
+                </Avatar>
                 <span className="truncate text-[11.5px] font-medium text-muted-foreground">
                   {card.assigned_to_name?.split(" ").slice(0, 2).join(" ")}
                 </span>

@@ -22,6 +22,7 @@ import { useState }                                  from "react";
 import { useRouter }                                 from "next/navigation";
 import { Pencil, Trash2 }                            from "lucide-react";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SimpleDeleteModal }  from "@/app/dashboard/projetos/_components/ProjectModals";
 import { CaseStepperSidebar } from "./stepper/CaseStepperSidebar";
 import { CaseStepPanel }      from "./stepper/CaseStepPanel";
@@ -51,6 +52,7 @@ export interface TestCase {
   priority_display:      string;
   assigned_to:           string | null;
   assigned_to_name:      string | null;
+  assigned_to_avatar:    string | null;
   project:               string;
   project_name:          string;
   module:                string;
@@ -146,6 +148,7 @@ export function CaseViewMode({ caso, onEdit, onDelete, deleting }: Props) {
   const priority    = PRIORITY_STYLE[caso.priority];
   const modColor    = caso.module ? moduleColor(caso.module) : null;
   const responsavel = caso.assigned_to_name || "";
+  const responsavelAvatar = caso.assigned_to_avatar;
 
   return (
     <div
@@ -222,13 +225,17 @@ export function CaseViewMode({ caso, onEdit, onDelete, deleting }: Props) {
               {/* Responsável */}
               <div className="inline-flex items-center gap-2">
                 {responsavel ? (
-                  <span
-                    className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full text-[9px] font-bold text-white"
-                    style={{ background: avatarColor(responsavel) }}
-                    title={responsavel}
-                  >
-                    {initialsOf(responsavel)}
-                  </span>
+                  <Avatar className="h-[22px] w-[22px]" title={responsavel}>
+                    {responsavelAvatar && (
+                      <AvatarImage src={responsavelAvatar} alt={responsavel} />
+                    )}
+                    <AvatarFallback
+                      className="text-[9px] font-bold text-white"
+                      style={{ background: avatarColor(responsavel) }}
+                    >
+                      {initialsOf(responsavel)}
+                    </AvatarFallback>
+                  </Avatar>
                 ) : (
                   <span
                     className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full text-[9px] font-bold"

@@ -7,18 +7,23 @@ export function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
   const connectSrc = ["'self'", "https:"];
+  // img-src: 'self' (front), data: (avatars inline), https: (fotos no S3 em prod)
+  const imgSrc = ["'self'", "data:", "https:"];
 
-  // Em desenvolvimento, permite a conexão com a API via HTTP
+  // Em desenvolvimento, permite a conexão E as imagens da API via HTTP
+  // (o backend serve as fotos em http://localhost:8000/media/..., que sem
+  // isso seriam bloqueadas pela CSP por serem http e de outra origem).
   if (process.env.NODE_ENV === "development") {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     connectSrc.push(apiUrl);
+    imgSrc.push(apiUrl);
   }
 
   const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-eval' 'unsafe-inline';
     style-src 'self' 'unsafe-inline';
-    img-src 'self' data: https:;
+    img-src ${imgSrc.join(" ")};
     connect-src ${connectSrc.join(" ")};
     font-src 'self' data:;
   `
