@@ -7,6 +7,7 @@
 import { useState, useCallback } from "react";
 import { useProjects } from "@/hooks/useProjects";
 import { useEnvironments } from "../../hooks/useEnvironments";
+import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select";
 
 const PIPELINE_STAGES = [
   { icon: "⚙",  name: "Setup ambiente",              duration: "~5s" },
@@ -81,20 +82,30 @@ export function PipelineConfig({ onStart }: PipelineConfigProps) {
 
       {/* Grid 3 colunas: Projeto, Ambiente, Branch */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 24 }}>
+        {/* Select do padrão do app (Radix, components/ui/select) — o <select>
+            nativo não permite estilizar o dropdown. Com value="" o Radix
+            mostra o placeholder do trigger. */}
         <div style={cardStyle}>
           <label style={labelStyle}>Projeto <span style={{ color: "#dc2626" }}>*</span></label>
-          <select value={projectId} onChange={(e) => handleProjectChange(e.target.value)} className="glass-input w-full rounded-lg px-3.5 py-2.5 text-sm appearance-none">
-            <option value="">{loadingProjects ? "Carregando..." : "Selecione..."}</option>
-            {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
+          <Select value={projectId} onValueChange={handleProjectChange} disabled={loadingProjects}>
+            <SelectTrigger className="w-full" placeholder={loadingProjects ? "Carregando..." : "Selecione..."} />
+            <SelectContent>
+              {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
 
         <div style={{ ...cardStyle, opacity: projectId ? 1 : 0.45, transition: "opacity 0.2s" }}>
           <label style={labelStyle}>Ambiente <span style={{ color: "#dc2626" }}>*</span></label>
-          <select value={environmentId} onChange={(e) => setEnvironmentId(e.target.value)} disabled={!projectId || loadingEnvironments} className="glass-input w-full rounded-lg px-3.5 py-2.5 text-sm appearance-none">
-            <option value="">{!projectId ? "Selecione um projeto primeiro" : loadingEnvironments ? "Carregando..." : "Selecione..."}</option>
-            {environments.map((env) => <option key={env.id} value={env.id}>{env.env_type_display}</option>)}
-          </select>
+          <Select value={environmentId} onValueChange={setEnvironmentId} disabled={!projectId || loadingEnvironments}>
+            <SelectTrigger
+              className="w-full"
+              placeholder={!projectId ? "Selecione um projeto primeiro" : loadingEnvironments ? "Carregando..." : "Selecione..."}
+            />
+            <SelectContent>
+              {environments.map((env) => <SelectItem key={env.id} value={env.id}>{env.env_type_display}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
 
         <div style={{ ...cardStyle, opacity: projectId ? 1 : 0.45, transition: "opacity 0.2s" }}>
