@@ -235,9 +235,20 @@ export function PipelineRunning({
             background: isDone ? "#16a34a" : "#7c3aed",
             display: "flex", alignItems: "center", justifyContent: "center",
             color: "white", fontSize: 18,
-            animation: isDone ? "none" : "spin 2s linear infinite",
           }}>
-            {isDone ? "✓" : "↻"}
+            {isDone ? (
+              "✓"
+            ) : (
+              <svg
+                width="22" height="22" viewBox="0 0 24 24" fill="none"
+                style={{ animation: "spin 0.8s linear infinite" }}
+              >
+                {/* trilho translúcido (o anel completo, apagado) */}
+                <circle cx="12" cy="12" r="9" stroke="rgba(255,255,255,0.3)" strokeWidth="3" />
+                {/* arco branco visível que dá a sensação de rotação */}
+                <path d="M12 3 a9 9 0 0 1 9 9" stroke="white" strokeWidth="3" strokeLinecap="round" />
+              </svg>
+            )}
           </div>
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: isDone ? "#16a34a" : "#7c3aed", fontFamily: "inherit" }}>
