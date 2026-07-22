@@ -59,7 +59,7 @@ app/
 | `useProjectDetail` | Detalhe de projeto |
 | `useProjectList` / `useProjects` | Listagem de projetos |
 | `useCaseList` / `useCreateCase` / `useEditCase` | CRUD de casos de teste |
-| `useDashboardData` | Métricas do dashboard principal |
+| `useDashboardSummary` | Métricas agregadas do dashboard gerencial (endpoint único) |
 | `useAdminTable` | Tabela genérica com sort + filtro + paginação |
 | `useTableFiltering` / `useTableSorting` / `useTablePagination` | Primitivos de tabela |
 
