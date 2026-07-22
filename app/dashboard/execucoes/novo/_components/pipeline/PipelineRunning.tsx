@@ -1,21 +1,25 @@
 // =============================================================================
 // PipelineRunning — dispara pipeline GitLab CI e aguarda o resultado no Hub
 //
-// Fluxo real:
-//   1. Na montagem: POST /api/v1/runs/trigger-pipeline/ → recebe web_url do GitLab
-//   2. Polling: GET /api/v1/runs/?project=...&ordering=-started_at a cada 5s
-//   3. Quando encontra run com status COMPLETED e started_at > triggeredAt → concluído
+// Fluxo real (toda a lógica de dados vive no hook usePipelinePolling):
+//   1. Na montagem: POST /api/v1/runs/trigger-pipeline/ → recebe o UUID do
+//      TestRun criado no backend (PENDING) + web_url do GitLab
+//   2. Polling: GET /api/v1/runs/{id}/ a cada 5s — o run EXATO, por id
+//   3. status COMPLETED → métricas | FAILED → tela de falha | 10min → timeout
 //   4. Botão navega para /dashboard/execucoes/{run.id}
 //
 // A animação das etapas é cosmética (timer-based) — reflete as etapas reais
-// do .gitlab-ci.yml mas sem sincronização com o GitLab API.
+// do .gitlab-ci.yml mas sem sincronização com o GitLab API. Só o DESFECHO
+// (sucesso/falha/timeout) é real.
 // =============================================================================
 
 "use client";
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { triggerPipeline, listRuns, TestRun } from "@/lib/api/runs";
+import { toast } from "sonner";
+import { cancelRun } from "@/lib/api/runs";
+import { usePipelinePolling } from "./usePipelinePolling";
 
 const PIPELINE_STAGES = [
   { id: "setup",   name: "Setup ambiente",             icon: "⚙",  duration: "~5s",   delay: 0     },
@@ -28,47 +32,87 @@ const PIPELINE_STAGES = [
 type StageStatus = "pending" | "running" | "done";
 
 interface PipelineRunningProps {
-  projectId:     string;
-  environmentId: string;
-  branch:        string;
-  onBack:        () => void;
+  projectId:      string;
+  environmentId:  string;
+  branch:         string;
+  // Presentes só quando a tela foi RESTAURADA (usuário saiu e voltou):
+  // reanexam o polling ao run existente, sem re-disparar.
+  restoredRunId?:  string;
+  restoredWebUrl?: string | null;
+  startedAt?:      number;
+  onBack:          () => void;
 }
 
-export function PipelineRunning({ projectId, environmentId, branch, onBack }: PipelineRunningProps) {
+export function PipelineRunning({
+  projectId,
+  environmentId,
+  branch,
+  restoredRunId,
+  restoredWebUrl,
+  startedAt,
+  onBack,
+}: PipelineRunningProps) {
   const router = useRouter();
 
   const [stageStatuses, setStageStatuses] = useState<StageStatus[]>(
     Array(PIPELINE_STAGES.length).fill("pending"),
   );
-  const [elapsed, setElapsed]     = useState(0);
-  const [webUrl, setWebUrl]       = useState<string | null>(null);
-  const [completedRun, setCompletedRun] = useState<TestRun | null>(null);
-  const [error, setError]         = useState<string | null>(null);
+  // Ao restaurar, retoma o cronômetro do tempo real decorrido desde o disparo.
+  const [elapsed, setElapsed] = useState(
+    startedAt ? Math.max(0, Math.floor((Date.now() - startedAt) / 1000)) : 0,
+  );
 
-  // Momento em que o trigger foi feito — usado para filtrar runs anteriores
-  const triggeredAt  = useRef<string>(new Date().toISOString());
-  const timers       = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const pollRef      = useRef<ReturnType<typeof setInterval> | null>(null);
-  // Guard contra double-fire do React StrictMode (Next.js 15 ativa strict por padrão)
-  const hasFiredRef  = useRef(false);
+  // Disparo + polling determinístico por run_id vivem no hook (dados);
+  // este componente cuida só da apresentação (animação, cronômetro, telas).
+  // Se veio restaurado, passamos o run existente → o hook reanexa sem disparar.
+  const { runId, webUrl, completedRun, error, failure, timedOut, isSettled } =
+    usePipelinePolling(
+      projectId,
+      environmentId,
+      branch,
+      restoredRunId ? { runId: restoredRunId, webUrl: restoredWebUrl ?? null } : undefined,
+    );
+
+  const [cancelling, setCancelling] = useState(false);
+
+  // Cancela de verdade: chama o backend (que marca CANCELLED e cancela a
+  // pipeline no GitLab) e só então sai da tela. Se falhar, mantém o usuário
+  // aqui para tentar de novo — não descarta o acompanhamento silenciosamente.
+  const handleCancel = async () => {
+    if (!runId) return;           // ainda sem run criado — nada a cancelar
+    setCancelling(true);
+    try {
+      await cancelRun(runId);
+      toast.success("Execução cancelada.");
+      onBack();
+    } catch {
+      toast.error("Não foi possível cancelar a execução. Tente novamente.");
+      setCancelling(false);
+    }
+  };
+
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   // Ref do relógio — permite pará-lo de fora do closure do efeito principal
   const clockTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // ── Quando a pipeline conclui: para cronômetro + força todas as etapas "done" ──
-  // Necessário porque a animação das etapas é baseada em timers fixos; se a pipeline
-  // terminar antes dos 130s da etapa "tests", as etapas ficariam presas no meio.
+  // ── Em QUALQUER desfecho (sucesso/falha/erro/timeout): para o cronômetro ────
+  // e os timers da animação. No sucesso, força todas as etapas para "done"
+  // (a animação é baseada em timers fixos; se a pipeline terminar antes dos
+  // 130s da etapa "tests", as etapas ficariam presas no meio).
   useEffect(() => {
-    if (!completedRun) return;
+    if (!isSettled) return;
     timers.current.forEach(clearTimeout);
     timers.current = [];
-    setStageStatuses(Array(PIPELINE_STAGES.length).fill("done"));
+    if (completedRun) {
+      setStageStatuses(Array(PIPELINE_STAGES.length).fill("done"));
+    }
     if (clockTimerRef.current) {
       clearInterval(clockTimerRef.current);
       clockTimerRef.current = null;
     }
-  }, [completedRun]);
+  }, [isSettled, completedRun]);
 
-  // ── Efeito principal: dispara pipeline + inicia animação + polling ──────────
+  // ── Efeito principal: animação cosmética das etapas + cronômetro ────────────
   useEffect(() => {
     // Limpa timers residuais antes de (re)iniciar — seguro para o double-mount do StrictMode
     timers.current.forEach(clearTimeout);
@@ -99,61 +143,6 @@ export function PipelineRunning({ projectId, environmentId, branch, onBack }: Pi
       timers.current.push(startT, doneT);
     });
 
-    // 1. Dispara a pipeline no GitLab — guard evita double-fire do React StrictMode
-    if (!hasFiredRef.current) {
-      hasFiredRef.current = true;
-
-      triggerPipeline({ project_id: projectId, environment_id: environmentId, branch })
-        .then((res) => {
-          setWebUrl(res.data.web_url);
-
-          // 2. Inicia polling a cada 5s
-          pollRef.current = setInterval(async () => {
-            try {
-              // Filtra diretamente no servidor: somente runs COMPLETED iniciados
-              // após o momento em que o trigger foi feito. Evita comparação de
-              // strings ISO com formatos diferentes (Z vs +00:00) e garante que
-              // runs de pipelines anteriores não sejam confundidos com o atual.
-              const page = await listRuns({
-                project: projectId,
-                ordering: "-started_at",
-                status: "COMPLETED",
-                started_at_after: triggeredAt.current,
-              });
-              const found = page.data.results[0] ?? null;
-              if (found) {
-                setCompletedRun(found);
-                clearInterval(pollRef.current!);
-                pollRef.current = null;
-                // Cronômetro e etapas são parados pelo useEffect acima (on completedRun)
-              }
-            } catch (err: unknown) {
-              // Para erros 4xx (ex: 400 filtro inválido) o polling não vai se
-              // recuperar sozinho — interrompe para evitar spam de requisições
-              const status = (err as { status?: number })?.status;
-              if (status && status >= 400 && status < 500) {
-                setError(`Erro ao consultar execuções (${status}). Verifique os parâmetros.`);
-                clearInterval(pollRef.current!);
-                pollRef.current = null;
-                if (clockTimerRef.current) {
-                  clearInterval(clockTimerRef.current);
-                  clockTimerRef.current = null;
-                }
-              }
-              // Erros 5xx ou de rede são transitórios — deixa o polling continuar
-            }
-          }, 5000);
-        })
-        .catch((err: unknown) => {
-          const msg = err instanceof Error ? err.message : String(err);
-          setError(msg);
-          if (clockTimerRef.current) {
-            clearInterval(clockTimerRef.current);
-            clockTimerRef.current = null;
-          }
-        });
-    }
-
     return () => {
       timers.current.forEach(clearTimeout);
       timers.current = [];
@@ -161,12 +150,8 @@ export function PipelineRunning({ projectId, environmentId, branch, onBack }: Pi
         clearInterval(clockTimerRef.current);
         clockTimerRef.current = null;
       }
-      if (pollRef.current) {
-        clearInterval(pollRef.current);
-        pollRef.current = null;
-      }
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const isDone = completedRun !== null;
 
@@ -179,25 +164,54 @@ export function PipelineRunning({ projectId, environmentId, branch, onBack }: Pi
     boxShadow: "var(--glass-shadow)",
   };
 
-  // ── Tela de erro ───────────────────────────────────────────────────────────
-  if (error) {
+  // ── Tela de desfecho sem sucesso ─────────────────────────────────────────
+  // Três casos distintos: o DISPARO falhou (error), a PIPELINE falhou depois
+  // de disparada (failure), ou 10 min se passaram sem desfecho (timedOut).
+  // Nos dois últimos o link do GitLab existe e é a melhor pista para o usuário.
+  const problem = error
+    ? { icon: "⚠", color: "#dc2626", title: "Erro ao disparar a pipeline", message: error }
+    : failure
+    ? { icon: "✕", color: "#dc2626", title: "A pipeline falhou", message: failure }
+    : timedOut
+    ? {
+        icon: "⏱", color: "#ca8a04",
+        title: "A pipeline demorou mais que o esperado",
+        message: "Paramos de acompanhar por aqui — veja o andamento diretamente no GitLab.",
+      }
+    : null;
+
+  if (problem) {
     return (
       <div style={{ ...cardStyle, padding: 32, textAlign: "center" }}>
-        <div style={{ fontSize: 32, marginBottom: 12 }}>⚠</div>
-        <div style={{ fontSize: 15, fontWeight: 700, color: "#dc2626", marginBottom: 8 }}>
-          Erro ao disparar a pipeline
+        <div style={{ fontSize: 32, marginBottom: 12 }}>{problem.icon}</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: problem.color, marginBottom: 8 }}>
+          {problem.title}
         </div>
-        <div style={{ fontSize: 13, color: "var(--col-muted)", marginBottom: 24 }}>{error}</div>
-        <button
-          onClick={onBack}
-          style={{
-            padding: "10px 24px", borderRadius: 8, border: "1.5px solid var(--glass-card-border)",
-            background: "var(--glass-field-bg)", color: "var(--col-muted)",
-            fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-          }}
-        >
-          ← Voltar
-        </button>
+        <div style={{ fontSize: 13, color: "var(--col-muted)", marginBottom: 24 }}>{problem.message}</div>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+          <button
+            onClick={onBack}
+            style={{
+              padding: "10px 24px", borderRadius: 8, border: "1.5px solid var(--glass-card-border)",
+              background: "var(--glass-field-bg)", color: "var(--col-muted)",
+              fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+            }}
+          >
+            ← Voltar
+          </button>
+          {webUrl && (
+            <a
+              href={webUrl} target="_blank" rel="noreferrer"
+              style={{
+                padding: "10px 24px", borderRadius: 8, border: "none",
+                background: "#2563eb", color: "white", textDecoration: "none",
+                fontSize: 14, fontWeight: 700, fontFamily: "inherit",
+              }}
+            >
+              Ver no GitLab ↗
+            </a>
+          )}
+        </div>
       </div>
     );
   }
@@ -250,15 +264,18 @@ export function PipelineRunning({ projectId, environmentId, branch, onBack }: Pi
           </div>
           {!isDone && (
             <button
-              onClick={onBack}
+              onClick={handleCancel}
+              disabled={cancelling || !runId}
               style={{
                 padding: "7px 14px", borderRadius: 7,
                 border: "1.5px solid #fca5a5", background: "#fee2e2",
                 color: "#dc2626", fontSize: 12, fontWeight: 600,
-                cursor: "pointer", fontFamily: "inherit",
+                cursor: cancelling || !runId ? "not-allowed" : "pointer",
+                opacity: cancelling || !runId ? 0.6 : 1,
+                fontFamily: "inherit",
               }}
             >
-              ✕ Cancelar
+              {cancelling ? "Cancelando..." : "✕ Cancelar"}
             </button>
           )}
         </div>

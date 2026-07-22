@@ -17,7 +17,8 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { loadActiveRun, clearActiveRun, ActivePipelineRun } from "@/lib/pipeline/activeRun";
 import { ModeSelector } from "./ModeSelector";
 import { StepIndicator } from "./StepIndicator";
 import { UploadForm } from "./upload/UploadForm";
@@ -49,6 +50,27 @@ export function NovoRunClient() {
 
   // Pipeline mock — projeto/ambiente/branch escolhidos
   const [pipeConfig, setPipeConfig] = useState<{ projectId: string; environmentId: string; branch: string } | null>(null);
+
+  // Run restaurado do localStorage — quando existe, pulamos o formulário e
+  // reanexamos o polling ao run que já estava rodando (sem re-disparar).
+  const [restored, setRestored] = useState<ActivePipelineRun | null>(null);
+
+  // Na montagem: se há uma pipeline ativa gravada, volta direto para "running".
+  // Feito em useEffect (não no useState) porque localStorage não existe no SSR —
+  // evita mismatch de hidratação. Custo: 1 frame de flash do formulário.
+  useEffect(() => {
+    const active = loadActiveRun();
+    if (active) {
+      setMode("pipeline");
+      setPipeStep("running");
+      setPipeConfig({
+        projectId: active.projectId,
+        environmentId: active.environmentId,
+        branch: active.branch,
+      });
+      setRestored(active);
+    }
+  }, []);
 
   // Ao mudar de modo, reseta os steps para o início
   const handleModeChange = (m: Mode) => {
@@ -121,7 +143,12 @@ export function NovoRunClient() {
               projectId={pipeConfig.projectId}
               environmentId={pipeConfig.environmentId}
               branch={pipeConfig.branch}
+              restoredRunId={restored?.runId}
+              restoredWebUrl={restored?.webUrl}
+              startedAt={restored?.startedAt}
               onBack={() => {
+                clearActiveRun();   // cancelar/nova pipeline → some o run persistido
+                setRestored(null);
                 setPipeStep("config");
                 setPipeConfig(null);
               }}
