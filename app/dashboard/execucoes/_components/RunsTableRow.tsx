@@ -17,8 +17,11 @@ interface RunsTableRowProps {
 }
 
 function RunsTableRow({ run, onClick }: RunsTableRowProps) {
-  const date = run.started_at
-    ? new Date(run.started_at).toLocaleDateString("pt-BR", {
+  // Usa started_at quando existe; senão created_at (runs PENDING de pipeline
+  // ainda não têm started_at) — assim a coluna nunca fica "—" e bate com a ordem.
+  const dateSource = run.started_at || run.created_at;
+  const date = dateSource
+    ? new Date(dateSource).toLocaleDateString("pt-BR", {
         day: "2-digit",
         month: "short",
         year: "numeric",

@@ -48,8 +48,9 @@ export interface TestRun {
   success_rate: number;
   duration_seconds: number | null;
   duration_formatted: string | null;
-  started_at: string;
+  started_at: string | null;   // NULL em runs PENDING (pipeline ainda não iniciou)
   completed_at: string | null;
+  created_at: string;   // sempre preenchido (criação/disparo) — base da ordenação
   tags: RunTag[];
 }
 
@@ -90,6 +91,8 @@ export interface ListRunsParams {
   page?: number;
   search?: string;
   status?: string;
+  /** Filtra por múltiplos status de uma vez (CSV). Ex.: "PENDING,RUNNING" */
+  status__in?: string;
   project?: string;
   branch?: string;
   ordering?: string;
@@ -147,9 +150,13 @@ export function uploadReport(data: unknown) {
 }
 
 // Resposta do POST /api/v1/runs/trigger-pipeline/
-// O backend chama o GitLab API e retorna os dados da pipeline criada.
+// O backend cria um TestRun PENDING, chama o GitLab API e devolve AMBOS:
+// os dados da pipeline E os IDs do run recem-criado. O `id` (UUID) e o "fio"
+// que liga o disparo ao resultado — o polling consulta GET /runs/{id}/ direto.
 export interface TriggerPipelineResponse {
-  gitlab_pipeline_id: number;  // ID numérico da pipeline no GitLab
+  run_id:             string;  // ID legivel humano (ex: "run-20260313-001")
+  id:                 string;  // UUID do TestRun — usado no polling por id
+  gitlab_pipeline_id: number;  // ID numerico da pipeline no GitLab
   web_url:            string;  // link direto para a pipeline no GitLab
   status:             string;  // status inicial: "created" | "pending" | "running"
 }
@@ -161,4 +168,29 @@ export function triggerPipeline(data: {
   branch:         string;
 }) {
   return post<TriggerPipelineResponse>("/api/v1/runs/trigger-pipeline/", data);
+}
+
+// Resposta do GET /api/v1/runs/{id}/pipeline-status/
+// O backend consulta o GitLab (proxy — o token nunca chega ao navegador) e,
+// se a pipeline morreu antes do reporter enviar o relatorio, marca o run
+// como FAILED. Serve para o frontend detectar falha sem esperar para sempre.
+export interface PipelineStatusResponse {
+  gitlab_status: string;                // "running" | "success" | "failed" | "canceled" | ...
+  run_status:    TestRun["status"];     // status do TestRun apos a checagem
+  web_url:       string;                // link da pipeline no GitLab
+}
+
+/** Consulta o status real da pipeline GitLab vinculada a um run */
+export function getPipelineStatus(id: string) {
+  return get<PipelineStatusResponse>(
+    `${api.endpoints.runs}${id}/pipeline-status/`,
+  );
+}
+
+/**
+ * Cancela uma execução. Além de marcar o run como CANCELLED no Hub, o backend
+ * também cancela a pipeline no GitLab (quando o run veio de trigger-pipeline).
+ */
+export function cancelRun(id: string) {
+  return post<TestRunDetail>(`${api.endpoints.runs}${id}/cancel/`, {});
 }

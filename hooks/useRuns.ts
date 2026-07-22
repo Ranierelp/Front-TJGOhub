@@ -48,11 +48,19 @@ export function useRuns(projectId?: string) {
 
     const params: ListRunsParams = {
       page,
-      ordering: "-started_at",
+      // Ordena por created_at (sempre preenchido). started_at é NULL em runs
+      // PENDING de pipeline, o que embaralhava a lista (NULLs vêm primeiro no
+      // DESC do Postgres). created_at reflete quando a run foi disparada.
+      ordering: "-created_at",
       ...(searchDebounced && { search: searchDebounced }),
-      ...(statusFilter !== "all" && { status: statusFilter }),
       ...(projectId && { project: projectId }),
     };
+
+    if (statusFilter === "RUNNING") {
+      params.status__in = "PENDING,RUNNING";
+    } else if (statusFilter !== "all") {
+      params.status = statusFilter;
+    }
 
     listRuns(params)
       .then((res) => {
