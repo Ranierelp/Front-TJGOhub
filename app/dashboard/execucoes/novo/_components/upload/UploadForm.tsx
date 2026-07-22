@@ -17,6 +17,7 @@ import { useState, useCallback } from "react";
 import { useProjects } from "@/hooks/useProjects";
 import { useEnvironments } from "../../hooks/useEnvironments";
 import { UploadDropzone } from "./UploadDropzone";
+import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select";
 
 interface UploadFormProps {
   onNext: (
@@ -80,24 +81,23 @@ export function UploadForm({ onNext }: UploadFormProps) {
     <div>
       {/* Selects: Projeto e Ambiente em grid 2 colunas */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
-        {/* Select de Projeto */}
+        {/* Select de Projeto — padrão do app (Radix, components/ui/select).
+            Com value="" o Radix mostra o placeholder do trigger. */}
         <div style={cardStyle}>
           <label style={labelStyle}>
             Projeto <span style={{ color: "#dc2626" }}>*</span>
           </label>
-          <select
-            value={projectId}
-            onChange={(e) => handleProjectChange(e.target.value)}
-            disabled={loadingProjects}
-            className="glass-input w-full rounded-lg px-3.5 py-2.5 text-sm appearance-none"
-          >
-            <option value="">
-              {loadingProjects ? "Carregando..." : "Selecione um projeto..."}
-            </option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
+          <Select value={projectId} onValueChange={handleProjectChange} disabled={loadingProjects}>
+            <SelectTrigger
+              className="w-full"
+              placeholder={loadingProjects ? "Carregando..." : "Selecione um projeto..."}
+            />
+            <SelectContent>
+              {projects.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Select de Ambiente — desabilitado até projeto ser escolhido */}
@@ -105,23 +105,27 @@ export function UploadForm({ onNext }: UploadFormProps) {
           <label style={labelStyle}>
             Ambiente <span style={{ color: "#dc2626" }}>*</span>
           </label>
-          <select
+          <Select
             value={environmentId}
-            onChange={(e) => setEnvironmentId(e.target.value)}
+            onValueChange={setEnvironmentId}
             disabled={!projectId || loadingEnvironments}
-            className="glass-input w-full rounded-lg px-3.5 py-2.5 text-sm appearance-none"
           >
-            <option value="">
-              {!projectId
-                ? "Selecione um projeto primeiro"
-                : loadingEnvironments
-                ? "Carregando..."
-                : "Selecione um ambiente..."}
-            </option>
-            {environments.map((env) => (
-              <option key={env.id} value={env.id}>{env.env_type_display}</option>
-            ))}
-          </select>
+            <SelectTrigger
+              className="w-full"
+              placeholder={
+                !projectId
+                  ? "Selecione um projeto primeiro"
+                  : loadingEnvironments
+                  ? "Carregando..."
+                  : "Selecione um ambiente..."
+              }
+            />
+            <SelectContent>
+              {environments.map((env) => (
+                <SelectItem key={env.id} value={env.id}>{env.env_type_display}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
