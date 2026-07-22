@@ -117,7 +117,16 @@ apiClient.interceptors.request.use(
     // Fora de componentes (como aqui) usamos .getState() diretamente.
     const token = useAuthStore.getState().getAccessToken();
 
-    if (token && !useAuthStore.getState().isTokenExpired()) {
+    // Endpoints PÚBLICOS de recuperação de senha: nunca mandam Authorization.
+    // Motivo: um admin logado que abre o link de reset de OUTRO usuário não deve
+    // "misturar" a própria sessão nessa requisição. O backend é AllowAny e
+    // identifica o usuário pelo `id` do link — o header só atrapalha (podia
+    // acionar o fluxo de refresh/logout do interceptor no meio do reset).
+    const ehEndpointPublicoDeSenha =
+      config.url?.includes("/password-reset/") ||
+      config.url?.includes("/request-password-reset/");
+
+    if (token && !useAuthStore.getState().isTokenExpired() && !ehEndpointPublicoDeSenha) {
       // Adiciona o header Authorization em TODA requisição autenticada.
       // Equivalente a: headers = {"Authorization": f"Bearer {token}"}
       config.headers.Authorization = `Bearer ${token}`;

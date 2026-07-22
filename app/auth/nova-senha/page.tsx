@@ -9,6 +9,7 @@ import { AuthCard } from "@/components/auth/AuthCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { confirmPasswordReset } from "@/lib/api/users";
+import { extractDrfError } from "@/lib/api/utils";
 
 export default function NovaSenhaPage() {
   const searchParams = useSearchParams();
@@ -40,8 +41,17 @@ export default function NovaSenhaPage() {
       setMessage("Senha redefinida com sucesso! Você já pode fazer login.");
       setNewPw("");
       setConfirmPw("");
-    } catch {
-      setMessage("Link inválido ou expirado. Solicite um novo link de recuperação.");
+    } catch (err: unknown) {
+      // Mostra o motivo REAL vindo do backend (token expirado, senha fraca,
+      // senha parecida com o email, etc.) em vez de mascarar tudo como
+      // "link inválido". O cliente HTTP rejeita com { message, details }.
+      const apiErr = err as { message?: string; details?: unknown };
+      setMessage(
+        extractDrfError(
+          apiErr?.details,
+          "Não foi possível redefinir a senha. O link pode ter expirado ou já ter sido usado.",
+        ),
+      );
       setIsSuccess(false);
     } finally {
       setIsLoading(false);
