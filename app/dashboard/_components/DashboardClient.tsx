@@ -1,71 +1,48 @@
 // =============================================================================
-// CONCEITO 4: A fronteira Server → Client Component
+// DashboardClient — orquestrador do dashboard gerencial (redesign)
 //
-// page.tsx (Server Component) não pode usar hooks nem estado.
-// Para termos dados dinâmicos (fetch + loading + error), precisamos de
-// um Client Component. Esse arquivo é essa fronteira.
+// Central de comando do QA lead, em 4 faixas:
+//   1. KpiCards            → 4 números de impacto imediato
+//   2. ProjectsHealthTable → saúde de todos os projetos (some com filtro)
+//   3. Análise (3 colunas) → top falhas · top instáveis · carga por responsável
+//   4. TrendChartCard      → tendência diária com período funcional
 //
-// Fluxo:
-//   page.tsx (Server)          → renderiza o shell estático (título, layout)
-//   DashboardClient (Client)   → busca dados, gerencia loading/error, renderiza cards
+// Estado que vive AQUI (lifting state up):
+//   - projectId → afeta o hook (re-busca) e a visibilidade da Faixa 2
+//   - days      → afeta o hook E o select do TrendChartCard (controlado)
 //
-// CONCEITO 5: Estados de UI — Loading, Error, Success
-//
-// Toda tela que busca dados assíncronos tem 3 estados possíveis:
-//   loading: true     → mostra spinner (dados ainda vindo)
-//   error: "msg"      → mostra mensagem de erro + botão de retry
-//   data: {...}       → mostra o conteúdo real
-//
-// CONCEITO 6: Lifting State Up — estado que afeta múltiplos filhos
-//
-// O projeto selecionado precisa ser passado para useDashboardData E
-// exibido no seletor. O estado deve ficar no componente pai comum:
-// aqui, o próprio DashboardClient.
-//
-//   DashboardClient (tem: projectId, setProjectId)
-//     ├── ProjectSelector  ← lê e modifica projectId
-//     └── Cards (via useDashboardData(projectId)) ← lê projectId
-//
-// Paralelo Django: é como um filtro na view que é passado para o queryset
-// E para o template (para marcar o item selecionado no <select>).
+// Todos os dados vêm de UMA chamada (useDashboardSummary) — as 3 chamadas
+// paralelas antigas foram substituídas pelo endpoint agregado no backend.
 // =============================================================================
 "use client";
 
 import { useState } from "react";
 import { FolderOpen, X } from "lucide-react";
 
-import { useDashboardData } from "@/hooks/useDashboardData";
-import { useProjects }      from "@/hooks/useProjects";
-import { Spinner }          from "@/components/ui/spinner";
+import { useDashboardSummary, type PeriodoDias } from "@/hooks/useDashboardSummary";
+import { useProjects } from "@/hooks/useProjects";
+import { Spinner } from "@/components/ui/spinner";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { LastRunCard }      from "./LastRunCard";
-import { PassRateCard }     from "./PassRateCard";
-import { TopFailuresCard }  from "./TopFailuresCard";
-import { TopFlakyCard }     from "./TopFlakyCard";
-import { TrendChartCard }   from "./TrendChartCard";
+import { KpiCards } from "./KpiCards";
+import { ProjectsHealthTable } from "./ProjectsHealthTable";
+import { TopFailuresCard } from "./TopFailuresCard";
+import { TopFlakyCard } from "./TopFlakyCard";
+import { WorkloadCard } from "./WorkloadCard";
+import { TrendChartCard } from "./TrendChartCard";
 
 export function DashboardClient() {
-  // =========================================================================
-  // CONCEITO 6 aplicado: estado do projeto selecionado
-  //
-  // "" significa "Todos os projetos" (sem filtro).
-  // Quando o usuário troca, setProjectId atualiza o estado →
-  // React re-renderiza → useDashboardData recebe o novo projectId →
-  // useEffect detecta a mudança → nova requisição à API.
-  // =========================================================================
+  // "" = todos os projetos (sem filtro na API)
   const [projectId, setProjectId] = useState<string>("");
+  const [days, setDays] = useState<PeriodoDias>(7);
 
-  // Passa undefined quando nenhum projeto selecionado (sem filtro na API)
-  const { data, loading, error, refetch } = useDashboardData(projectId || undefined);
+  const { data, loading, error, refetch } = useDashboardSummary(projectId || undefined, days);
   const { projects, loading: projectsLoading } = useProjects();
 
-  // Encontra o nome do projeto selecionado para exibição contextual
   const selectedProject = projects.find((p) => p.id === projectId);
 
   return (
     <div className="space-y-5">
-
-      {/* ── BARRA DE FILTRO POR PROJETO ─────────────────────────────────── */}
+      {/* ── Filtro global por projeto ────────────────────────────────────── */}
       <div
         className="flex items-center gap-3 bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 px-4 py-3 flex-wrap"
         style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
@@ -73,13 +50,6 @@ export function DashboardClient() {
         <FolderOpen size={16} className="text-blue-500 flex-shrink-0" />
         <span className="text-sm font-medium text-gray-600 dark:text-slate-300 flex-shrink-0">Projeto:</span>
 
-        {/*
-          Select de projetos — controlado pelo estado projectId.
-          "Controlado" = React gerencia o valor (value + onChange).
-          O oposto seria "não controlado" (deixar o DOM gerenciar).
-
-          Paralelo Django: <select name="projeto"> com selected dinâmico.
-        */}
         <Select
           value={projectId || "__all__"}
           onValueChange={(v) => setProjectId(v === "__all__" ? "" : v)}
@@ -91,19 +61,15 @@ export function DashboardClient() {
           <SelectContent>
             <SelectItem value="__all__">Todos os projetos</SelectItem>
             {projects.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.name}
-              </SelectItem>
+              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        {/* Botão "Limpar filtro" — aparece somente quando há projeto selecionado */}
         {projectId && (
           <button
             onClick={() => setProjectId("")}
-            className="flex items-center gap-1 text-xs text-gray-400 dark:text-slate-500
-                       hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
+            className="flex items-center gap-1 text-xs text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
             aria-label="Limpar filtro de projeto"
           >
             <X size={13} />
@@ -111,63 +77,59 @@ export function DashboardClient() {
           </button>
         )}
 
-        {/* Badge indicando o projeto ativo — feedback visual do filtro atual */}
         {selectedProject && (
-          <span className="ml-auto text-xs text-blue-600 dark:text-blue-300 bg-blue-50 dark:bg-blue-950 px-2.5 py-1
-                           rounded-full font-medium border border-blue-100 dark:border-blue-800">
+          <span className="ml-auto text-xs text-blue-600 dark:text-blue-300 bg-blue-50 dark:bg-blue-950 px-2.5 py-1 rounded-full font-medium border border-blue-100 dark:border-blue-800">
             Filtrando: {selectedProject.name}
           </span>
         )}
       </div>
 
-      {/* ── ESTADOS DE UI ────────────────────────────────────────────────── */}
-
-      {/* Estado: Carregando */}
+      {/* ── Estados de UI: loading / erro / sucesso ──────────────────────── */}
       {loading && (
         <div className="flex flex-col items-center justify-center py-24 gap-3">
           <Spinner size="lg" />
           <p className="text-sm text-muted-foreground">
             {selectedProject
-              ? `Carregando dados de "${selectedProject.name}"...`
-              : "Carregando dados..."}
+              ? `Carregando métricas de "${selectedProject.name}"...`
+              : "Carregando métricas..."}
           </p>
         </div>
       )}
 
-      {/* Estado: Erro */}
       {!loading && (error || !data) && (
         <div className="rounded-xl bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 p-8 text-center">
           <p className="text-sm font-semibold text-red-700 dark:text-red-300">
-            Não foi possível carregar os dados
+            Não foi possível carregar as métricas
           </p>
           <p className="text-xs text-red-500 dark:text-red-400 mt-1">
             {error ?? "Verifique se o servidor está acessível."}
           </p>
           <button
             onClick={refetch}
-            className="mt-4 px-4 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 border border-red-300 dark:border-red-700
-                       rounded-lg hover:bg-red-100 dark:hover:bg-red-900 transition-colors"
+            className="mt-4 px-4 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 border border-red-300 dark:border-red-700 rounded-lg hover:bg-red-100 dark:hover:bg-red-900 transition-colors"
           >
             Tentar novamente
           </button>
         </div>
       )}
 
-      {/* Estado: Sucesso — cards com dados reais */}
       {!loading && data && (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            {data.lastRun && <LastRunCard run={data.lastRun} />}
-            <PassRateCard
-              passed={data.passRate.passed}
-              failed={data.passRate.failed}
-              skipped={data.passRate.skipped}
-            />
-            <TopFailuresCard failures={data.failures} />
-            <TopFlakyCard    flaky={data.flaky} />
+          {/* Faixa 1 — KPIs */}
+          <KpiCards kpis={data.kpis} />
+
+          {/* Faixa 2 — só em "Todos os projetos" (1 projeto = tabela de 1 linha) */}
+          {!projectId && <ProjectsHealthTable projects={data.projects_health} />}
+
+          {/* Faixa 3 — análise em 3 colunas */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <TopFailuresCard failures={data.top_failures} />
+            <TopFlakyCard flaky={data.top_flaky} />
+            <WorkloadCard workload={data.workload_by_assignee} />
           </div>
 
-          <TrendChartCard data={data.trend} />
+          {/* Faixa 4 — tendência com período controlado */}
+          <TrendChartCard data={data.trend} days={days} onDaysChange={setDays} />
         </>
       )}
     </div>
